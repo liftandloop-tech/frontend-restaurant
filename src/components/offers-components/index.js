@@ -1,0 +1,9 @@
+// Export all offers components for cleaner imports
+export { default as Header } from "./Header";
+export { default as PageHeader } from "./PageHeader";
+export { default as FiltersSection } from "./FiltersSection";
+export { default as OfferCard } from "./OfferCard";
+export { default as ActiveOffers } from "./ActiveOffers";
+export { default as SummaryCards } from "./SummaryCards";
+export { default as PerformanceOverview } from "./PerformanceOverview";
+export { default as TopPerformingOffers } from "./TopPerformingOffers";

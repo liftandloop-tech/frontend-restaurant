@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+body,
+html {
+  height: 100%;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar for all browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+input {
+  outline: none;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-left: 0;
+}
+
+.app-container.has-sidebar .main-content {
+  padding-left: 260px;
+}
+
+/* When sidebar is collapsed (this class will be handled by Sidebar component or parent) */
+/* Actually, the Sidebar handles its own fixed width. We just need to ensure the main content doesn't overlap. */
+/* But since Sidebar is fixed, we need padding. */
+
+.sidebar-collapsed-padding {
+  padding-left: 80px !important;
+}
