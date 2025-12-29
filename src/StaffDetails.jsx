@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { getStaffById } from "./utils/staff";
+import { useGetStaffByIdQuery } from "./features/staff/staffApiSlice";
 
 /**
  * Staff Details Page Component - Fixed Version
@@ -9,71 +9,52 @@ import { getStaffById } from "./utils/staff";
 const StaffDetails = () => {
   const { id } = useParams();
   const [isSaving, setIsSaving] = useState(false);
-  const [staffData, setStaffData] = useState(null);
 
+  // RTK Query
+  const { data: response, isLoading: loading, error: fetchError } = useGetStaffByIdQuery(id);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchStaffDetails = async () => {
-      try {
-        setLoading(true);
-        const response = await getStaffById(id);
-        if (response.success) {
-          const s = response.data;
-          // Map API data to UI structure
-          const mappedData = {
-            name: s.fullName,
-            staffId: s.username || s._id.slice(-6).toUpperCase(),
-            role: s.role,
-            status: s.isActive ? "Active" : "Inactive",
-            joinDate: s.dateOfJoining ? new Date(s.dateOfJoining).toLocaleDateString() : "N/A",
-            shift: (s.shiftStart && s.shiftEnd) ? `${s.shiftStart} - ${s.shiftEnd}` : "Not set",
-            profilePicture: s.profilePicture || `https://i.pravatar.cc/150?u=${s._id}`,
-            phone: s.phoneNumber,
-            email: s.email || "N/A",
-            branch: s.branch || "Main Branch",
-            supervisor: s.supervisor ? { name: s.supervisor.fullName || "Unknown", profilePicture: s.supervisor.profilePicture || "https://i.pravatar.cc/40" } : { name: "None", profilePicture: "" },
-            lastLogin: s.lastLogin ? new Date(s.lastLogin).toLocaleString() : "Never",
-            // Default metrics if not provided by backend yet
-            performance: {
-              attendanceRate: s.metrics?.attendanceRate || 0,
-              punctualityScore: s.metrics?.punctualityScore || 0,
-              ordersHandled: s.metrics?.ordersHandled || 0,
-              ordersGrowth: s.metrics?.ordersGrowth || 0,
-              hoursWorked: s.metrics?.hoursWorked || 0,
-            },
-            payroll: {
-              baseSalary: s.baseSalary || 0,
-              paymentMode: s.paymentMode || "Bank Transfer",
-              // ... other payroll fields
-            },
-            roleData: {
-              currentRole: s.role,
-              permissions: s.permissions || {},
-            },
-            notes: {
-              tags: s.tags || [],
-              description: s.internalNotes || "No notes available.",
-            }
-          };
-          setStaffData(mappedData);
-        } else {
-          setError("Failed to fetch staff details");
+  const staffData = useMemo(() => {
+    if (response?.success) {
+      const s = response.data;
+      // Map API data to UI structure
+      return {
+        name: s.fullName,
+        staffId: s.username || s._id.slice(-6).toUpperCase(),
+        role: s.role,
+        status: s.isActive ? "Active" : "Inactive",
+        joinDate: s.dateOfJoining ? new Date(s.dateOfJoining).toLocaleDateString() : "N/A",
+        shift: (s.shiftStart && s.shiftEnd) ? `${s.shiftStart} - ${s.shiftEnd}` : "Not set",
+        profilePicture: s.profilePicture || `https://i.pravatar.cc/150?u=${s._id}`,
+        phone: s.phoneNumber,
+        email: s.email || "N/A",
+        branch: s.branch || "Main Branch",
+        supervisor: s.supervisor ? { name: s.supervisor.fullName || "Unknown", profilePicture: s.supervisor.profilePicture || "https://i.pravatar.cc/40" } : { name: "None", profilePicture: "" },
+        lastLogin: s.lastLogin ? new Date(s.lastLogin).toLocaleString() : "Never",
+        // Default metrics if not provided by backend yet
+        performance: {
+          attendanceRate: s.metrics?.attendanceRate || 0,
+          punctualityScore: s.metrics?.punctualityScore || 0,
+          ordersHandled: s.metrics?.ordersHandled || 0,
+          ordersGrowth: s.metrics?.ordersGrowth || 0,
+          hoursWorked: s.metrics?.hoursWorked || 0,
+        },
+        payroll: {
+          baseSalary: s.baseSalary || 0,
+          paymentMode: s.paymentMode || "Bank Transfer",
+          // ... other payroll fields
+        },
+        roleData: {
+          currentRole: s.role,
+          permissions: s.permissions || {},
+        },
+        notes: {
+          tags: s.tags || [],
+          description: s.internalNotes || "No notes available.",
         }
-      } catch (err) {
-        console.error("Error fetching staff details:", err);
-        setError("Error loading data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchStaffDetails();
+      };
     }
-  }, [id]);
+    return null;
+  }, [response]);
 
   // Event handlers
   const handleSendMessage = () => {
@@ -84,45 +65,39 @@ const StaffDetails = () => {
     console.log("Edit staff:", staffData?.name);
   };
 
-  const handleMoreOptions = () => {
-    alert("More options menu would open here");
-  };
+  // const handleMoreOptions = () => {
+  //   alert("More options menu would open here");
+  // };
 
-  const handleProfileDataChange = (newData) => {
-    setStaffData((prev) => ({
-      ...prev,
-      ...newData,
-    }));
-    console.log("Profile data updated:", newData);
-  };
+  // const handleProfileDataChange = (newData) => {
+  //   // Handling local state updates if we were using local state, but now we rely on query cache revalidations generally.
+  //   // If we need to edit, we should likely trigger a mutation.
+  //   console.log("Profile data updated:", newData);
+  // };
 
-  const handleContactDataChange = (newData) => {
-    setStaffData((prev) => ({
-      ...prev,
-      ...newData,
-    }));
-    console.log("Contact data updated:", newData);
-  };
+  // const handleContactDataChange = (newData) => {
+  //   console.log("Contact data updated:", newData);
+  // };
 
   const handleViewFullAttendance = () => {
     alert("Opening full attendance report...");
   };
 
-  const handleViewPayrollHistory = () => {
-    alert("Opening payroll history...");
-  };
+  // const handleViewPayrollHistory = () => {
+  //   alert("Opening payroll history...");
+  // };
 
-  const handleProcessPayment = () => {
-    alert("Processing payment...");
-  };
+  // const handleProcessPayment = () => {
+  //   alert("Processing payment...");
+  // };
 
   const handleManageAccessPermissions = () => {
     alert(`Opening access permissions manager for ${staffData?.name}...`);
   };
 
-  const handleFileUpload = (file) => {
-    alert(`File "${file.name}" uploaded successfully!`);
-  };
+  // const handleFileUpload = (file) => {
+  //   alert(`File "${file.name}" uploaded successfully!`);
+  // };
 
   const handleCancel = () => {
     window.history.back();
@@ -141,12 +116,22 @@ const StaffDetails = () => {
   };
 
   // Loading state
-  if (!staffData) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading staff details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError || !staffData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p>Error loading staff details or staff not found.</p>
         </div>
       </div>
     );

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getActiveWaiters } from "../../utils/staff";
+import { getCustomers } from "../../utils/customers";
 
 const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
   const [waiters, setWaiters] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
 
   useEffect(() => {
     const loadWaiters = async () => {
@@ -23,6 +27,40 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
     loadWaiters();
   }, []);
 
+  const searchCustomers = async (searchValue) => {
+    if (!searchValue || searchValue.length < 2) {
+      setCustomers([]);
+      setShowCustomerDropdown(false);
+      return;
+    }
+
+    try {
+      setCustomerSearchLoading(true);
+      const response = await getCustomers({ search: searchValue });
+      if (response?.success && response?.data) {
+        setCustomers(response.data);
+        setShowCustomerDropdown(response.data.length > 0);
+      }
+    } catch (err) {
+      console.error("Error searching customers:", err);
+    } finally {
+      setCustomerSearchLoading(false);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setOrderInfo((prev) => ({
+      ...prev,
+      customerId: customer._id || customer.id,
+      customerName: customer.name || customer.fullName || "",
+      customerPhone: customer.phone || "",
+      customerEmail: customer.email || "",
+      deliveryPhone: customer.phone || "",
+      deliveryAddress: customer.address || "",
+    }));
+    setShowCustomerDropdown(false);
+  };
+
   const handleChange = (field, value) => {
     setOrderInfo((prev) => ({
       ...prev,
@@ -38,9 +76,9 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
 
       {/* Customer Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Customer Name - Required for online and takeaway orders */}
+        {/* Customer Name - Required for online, phone and takeaway orders */}
         {(orderType === "online" || orderType === "phone" || orderType === "takeaway") && (
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Customer Name <span className="text-red-500">*</span>
             </label>
@@ -48,15 +86,42 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
               type="text"
               placeholder="Customer name"
               value={orderInfo.customerName || ""}
-              onChange={(e) => handleChange("customerName", e.target.value)}
+              onChange={(e) => {
+                handleChange("customerName", e.target.value);
+                searchCustomers(e.target.value);
+              }}
+              onFocus={() => {
+                if (orderInfo.customerName && orderInfo.customerName.length >= 2) {
+                  setShowCustomerDropdown(true);
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
+            {showCustomerDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {customerSearchLoading ? (
+                  <div className="p-3 text-center text-gray-500 text-sm">Searching...</div>
+                ) : (
+                  customers.map((c) => (
+                    <button
+                      key={c._id || c.id}
+                      type="button"
+                      onClick={() => handleSelectCustomer(c)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+                    >
+                      <div className="font-medium text-gray-900">{c.name || c.fullName}</div>
+                      <div className="text-xs text-gray-500">{c.phone || "No phone"}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* Customer Phone - Required for all orders except maybe future types */}
-        {(orderType === "takeaway" || orderType === "phone" ) && (
+        {(orderType === "takeaway" || orderType === "phone") && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Customer Phone <span className="text-red-500">*</span>
@@ -73,7 +138,7 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
         )}
 
         {/* Delivery Phone - Required for phone and online orders */}
-        {(orderType === "phone" ) && (
+        {(orderType === "phone") && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Delivery Phone <span className="text-red-500">*</span>
@@ -90,7 +155,7 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
         )}
 
         {/* Delivery Address - Required for phone and online orders */}
-        {(orderType === "phone" ) && (
+        {(orderType === "phone") && (
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Delivery Address <span className="text-red-500">*</span>
@@ -107,7 +172,7 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
         )}
 
         {/* Delivery Time - Optional for phone and online orders */}
-        {(orderType === "phone" )&& (
+        {(orderType === "phone") && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Delivery Time (Optional)

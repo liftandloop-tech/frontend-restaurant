@@ -1,127 +1,88 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useGetTodaySummaryQuery } from "../../features/dashboard/dashboardApiSlice";
 
 /**
  * KeyMetricsCards component displays four key billing metrics
- *
- * Features:
- * - Total Bills Generated with trend indicator
- * - Total Revenue with trend indicator
- * - Average Bill Value with trend indicator
- * - Pending Payments with trend indicator
- * - Auto-refresh notification
- * - Responsive grid layout
  */
 const KeyMetricsCards = () => {
-  const metrics = [
-    {
-      id: 1,
-      title: "Total Bills Generated",
-      value: "1,284",
-      subtitle: "Average 42 bills/day",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-      bgColor: "bg-blue-500",
-      trend: {
-        value: "8%",
-        direction: "up",
-        color: "text-green-600",
+  const { data: summaryResponse, isLoading } = useGetTodaySummaryQuery();
+
+  const metrics = useMemo(() => {
+    const data = summaryResponse?.data || {};
+
+    return [
+      {
+        id: 1,
+        title: "Total Bills Generated",
+        value: data.totalBills || "0",
+        subtitle: `Average ${Math.round((data.totalBills || 0) / 30)} bills/day`,
+        icon: (
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        ),
+        bgColor: "bg-blue-500",
+        trend: {
+          value: `${data.trends?.bills || 0}%`,
+          direction: (data.trends?.bills || 0) >= 0 ? "up" : "down",
+          color: (data.trends?.bills || 0) >= 0 ? "text-green-600" : "text-red-600",
+        },
       },
-    },
-    {
-      id: 2,
-      title: "Total Revenue",
-      value: "₹ 12,85,000",
-      subtitle: "Net sales after tax adjustments",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-          />
-        </svg>
-      ),
-      bgColor: "bg-green-500",
-      trend: {
-        value: "5%",
-        direction: "up",
-        color: "text-green-600",
+      {
+        id: 2,
+        title: "Total Revenue",
+        value: `₹ ${(data.revenue || 0).toLocaleString()}`,
+        subtitle: "Net sales after tax adjustments",
+        icon: (
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+          </svg>
+        ),
+        bgColor: "bg-green-500",
+        trend: {
+          value: `${data.trends?.revenue || 0}%`,
+          direction: (data.trends?.revenue || 0) >= 0 ? "up" : "down",
+          color: (data.trends?.revenue || 0) >= 0 ? "text-green-600" : "text-red-600",
+        },
       },
-    },
-    {
-      id: 3,
-      title: "Average Bill Value",
-      value: "₹ 1,000",
-      subtitle: "Includes dine-in, takeaway, and online",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-          />
-        </svg>
-      ),
-      bgColor: "bg-blue-500",
-      trend: {
-        value: "--",
-        direction: "neutral",
-        color: "text-gray-400",
+      {
+        id: 3,
+        title: "Average Bill Value",
+        value: `₹ ${(data.averageOrderValue || 0).toLocaleString()}`,
+        subtitle: "Average revenue per order",
+        icon: (
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        ),
+        bgColor: "bg-purple-500",
+        trend: {
+          value: `${data.trends?.averageOrderValue || 0}%`,
+          direction: (data.trends?.averageOrderValue || 0) >= 0 ? "up" : "down",
+          color: (data.trends?.averageOrderValue || 0) >= 0 ? "text-green-600" : "text-red-600",
+        },
       },
-    },
-    {
-      id: 4,
-      title: "Pending Payments",
-      value: "₹ 35,600",
-      subtitle: "To be settled across 12 open bills.",
-      icon: (
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      bgColor: "bg-orange-500",
-      trend: {
-        value: "2%",
-        direction: "down",
-        color: "text-red-600",
+      {
+        id: 4,
+        title: "Pending Payments",
+        value: `₹ ${(data.pendingRevenue || 0).toLocaleString()}`,
+        subtitle: `To be settled across ${data.pendingOrders || 0} open bills.`,
+        icon: (
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        ),
+        bgColor: "bg-orange-500",
+        trend: {
+          value: `${data.trends?.pendingRevenue || 0}%`,
+          direction: (data.trends?.pendingRevenue || 0) >= 0 ? "up" : "down",
+          color: (data.trends?.pendingRevenue || 0) >= 0 ? "text-red-600" : "text-green-600",
+        },
       },
-    },
-  ];
+    ];
+  }, [summaryResponse]);
+
+  if (isLoading) return <div className="grid grid-cols-4 gap-6 mb-8">{[1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>)}</div>;
 
   return (
     <div className="mb-8">

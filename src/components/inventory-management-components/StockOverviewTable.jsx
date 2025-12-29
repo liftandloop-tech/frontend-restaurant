@@ -57,9 +57,8 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
             {data.map((item) => (
               <tr
                 key={item.id}
-                className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${
-                  selectedItem?.id === item.id ? "bg-blue-50" : ""
-                }`}
+                className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${selectedItem?.id === item.id ? "bg-blue-50" : ""
+                  }`}
                 onClick={() => onItemSelect(item)}
               >
                 {/* Item Column */}
@@ -68,7 +67,7 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                     <div className="font-medium text-gray-900 text-sm">
                       {item.name}
                     </div>
-                    <div className="text-xs text-gray-500">{item.category}</div>
+                    <div className="text-xs text-gray-500">{item.displayCategory}</div>
                   </div>
                 </td>
 
@@ -96,13 +95,12 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                 {/* Status Column */}
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${
-                      item.status === "In Stock"
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${item.status === "In Stock"
                         ? "bg-green-100 text-green-800"
                         : item.status === "Low Stock"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                   >
                     {item.status}
                   </span>
@@ -135,7 +133,7 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                         </button>
                       </>
                     )}
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onItemSelect(item);
@@ -143,7 +141,7 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                       className="px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-xs hover:bg-gray-50 hover:border-gray-400 transition-all"
                     >
                       View
-                    </button>
+                    </button> */}
                   </div>
                 </td>
               </tr>

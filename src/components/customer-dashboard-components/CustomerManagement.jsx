@@ -8,9 +8,9 @@ import CustomerDetails from "../../CustomerDetails";
  * CustomerManagement component is the main section for customer management
  * Includes filters, customer table, and feedback overview panel
  */
-const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = false }) => {
+const CustomerManagement = ({ customers, feedbackData, onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
-  const [activeFilters, setActiveFilters] = useState(["VIP Customers"]);
+  const [activeFilters, setActiveFilters] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isCustomerDetailsOpen, setIsCustomerDetailsOpen] = useState(false);
@@ -35,9 +35,54 @@ const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = 
 
   // Handle filter changes
   const handleFilterChange = (filterType, value) => {
-    // Implementation for filter logic would go here
-    console.log("Filter changed:", filterType, value);
+    setActiveFilters(prev => {
+      // Filter out any existing filter of the same type
+      const newFilters = prev.filter(f => !f.toLowerCase().startsWith(`${filterType.toLowerCase()}:`));
+
+      if (value === "") {
+        return newFilters;
+      }
+
+      // Add the new filter value
+      let displayValue = value;
+      if (filterType === 'type') {
+        if (value === 'vip') displayValue = 'VIP';
+        else if (value === 'regular') displayValue = 'Regular';
+        else if (value === 'revenue_card') displayValue = 'Revenue Card';
+      }
+
+      return [...newFilters, `${filterType}: ${displayValue.toLowerCase()}`];
+    });
   };
+
+  // Memoized filtered customers
+  const filteredCustomers = useMemo(() => {
+    let result = [...customers];
+
+    // Search filter
+    if (searchTerm) {
+      result = result.filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.phone.includes(searchTerm)
+      );
+    }
+
+    // Type filters from activeFilters state
+    activeFilters.forEach(filter => {
+      if (filter.startsWith("type: ")) {
+        const typeValue = filter.replace("type: ", "").toLowerCase();
+        if (typeValue === "vip") {
+          result = result.filter(c => c.isVIP);
+        } else if (typeValue === "revenue card") {
+          result = result.filter(c => c.revenueCardEnabled);
+        } else if (typeValue === "regular") {
+          result = result.filter(c => !c.isVIP);
+        }
+      }
+    });
+
+    return result;
+  }, [customers, searchTerm, activeFilters]);
 
   // Handle search changes
   const handleSearchChange = (value) => {
@@ -228,7 +273,7 @@ const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = 
         </div>
       )}
 
-      {/* Customer Activity & Information Overview //new */ }
+      {/* Customer Activity & Information Overview //new */}
       {customerAnalytics && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           {/* Customer Activity Levels */}
@@ -264,7 +309,7 @@ const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = 
                   <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                   <span className="text-sm text-gray-600">New Customers (0)</span>
                 </div>
-                <span className="font-semibold text-gray-900">{customerAnalytics.activityLevels.newCustomers}</span>
+                <span className="font-semibold text-gray-900">{customerAnalytics.activityLevels.newCustomers}</span>/
               </div>
             </div>
           </div>
@@ -354,11 +399,10 @@ const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = 
               {customerAnalytics.topSpenders.slice(0, 3).map((customer, index) => (
                 <div key={customer.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      index === 0 ? 'bg-yellow-500 text-white' :
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500 text-white' :
                       index === 1 ? 'bg-gray-400 text-white' :
-                      'bg-orange-600 text-white'
-                    }`}>
+                        'bg-orange-600 text-white'
+                      }`}>
                       {index + 1}
                     </div>
                     <span className="text-sm text-gray-600 truncate max-w-24">{customer.name}</span>
@@ -400,11 +444,13 @@ const CustomerManagement = ({ customers, feedbackData, onAddCustomer, loading = 
         {/* Customer Table - Takes 2/3 of the width on large screens */}
         <div className="lg:col-span-2">
           <CustomerTable
-            customers={customers}
+            customers={filteredCustomers}
             onSelectCustomer={handleCustomerSelect}
             onSelectAll={handleSelectAll}
             selectedCustomers={selectedCustomers}
             onCustomerClick={handleCustomerClick}
+            onEditCustomer={onEditCustomer}
+            onDeleteCustomer={onDeleteCustomer}
           />
         </div>
 

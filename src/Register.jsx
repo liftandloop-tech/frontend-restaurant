@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import { register } from "./utils/auth";
 
-const Register = ({ onRegister }) => {
+const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -70,13 +70,13 @@ const Register = ({ onRegister }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
-    
+
     try {
       // Prepare registration data
       const registrationData = {
@@ -88,16 +88,16 @@ const Register = ({ onRegister }) => {
 
       // Call backend API to register
       const response = await register(registrationData);
-      
+
       if (response.success) {
         // Don't auto-authenticate - let user login manually
         // Show success message and navigate to login page
         // Optionally pass email to login page via state
-        navigate("/login", { 
-          state: { 
+        navigate("/login", {
+          state: {
             registeredEmail: formData.email,
             message: "Registration successful! Please login to continue."
-          } 
+          }
         });
       }
     } catch (error) {
@@ -140,11 +140,10 @@ const Register = ({ onRegister }) => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.name
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Enter your full name"
                 />
               </div>
@@ -171,11 +170,10 @@ const Register = ({ onRegister }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.email
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -202,11 +200,10 @@ const Register = ({ onRegister }) => {
                   name="restaurantName"
                   value={formData.restaurantName}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.restaurantName
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.restaurantName
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Enter your restaurant name"
                 />
               </div>
@@ -235,11 +232,10 @@ const Register = ({ onRegister }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.password
+                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Create a password"
                 />
                 <button
@@ -277,11 +273,10 @@ const Register = ({ onRegister }) => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.confirmPassword
+                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.confirmPassword
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Confirm your password"
                 />
                 <button

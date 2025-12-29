@@ -13,15 +13,11 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const createKOT = async (orderId, station) => {
-  try {
-    const response = await api.post('kots/post/KOT/waiter', {
-      orderId,
-      station
-    });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('kots/post/KOT/waiter', {
+    orderId,
+    station
+  });
+  return response;
 };
 
 /**
@@ -30,14 +26,10 @@ export const createKOT = async (orderId, station) => {
  * @returns {Promise} Response from backend
  */
 export const getKOTs = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `kots/get/KOTs?${queryParams}` : 'kots/get/KOTs';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `kots/get/KOTs?${queryParams}` : 'kots/get/KOTs';
+  const response = await api.get(endpoint);
+  return response;
 };
 
 /**
@@ -46,12 +38,8 @@ export const getKOTs = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const getKOTById = async (kotId) => {
-  try {
-    const response = await api.get(`kots/get/KOT/by/${kotId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`kots/get/KOT/by/${kotId}`);
+  return response;
 };
 
 /**
@@ -61,12 +49,8 @@ export const getKOTById = async (kotId) => {
  * @returns {Promise} Response from backend
  */
 export const updateKOTStatus = async (kotId, status) => {
-  try {
-    const response = await api.patch(`kots/update/KOT/${kotId}/status`, { status });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.patch(`kots/update/KOT/${kotId}/status`, { status });
+  return response;
 };
 
 /**
@@ -75,11 +59,6 @@ export const updateKOTStatus = async (kotId, status) => {
  * @returns {Promise} Response from backend
  */
 export const markKOTPrinted = async (kotId) => {
-  try {
-    const response = await api.post(`kots/post/KOT/${kotId}/print`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post(`kots/post/KOT/${kotId}/print`);
+  return response;
 };
-

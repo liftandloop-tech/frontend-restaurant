@@ -8,17 +8,17 @@ import {
     LuMenu,
     LuPackage,
     LuUsers,
-    //LuBarChart3,
-    LuSettings,
     LuLogOut,
     LuChevronLeft,
     LuChevronRight,
     LuClock,
     LuBell,
-    LuUser
+    LuUser,
+    //LuSettings
 } from "react-icons/lu";
 import { AiOutlinePercentage } from "react-icons/ai";
 import { MdOutlineTableBar } from "react-icons/md";
+import { FiBarChart } from "react-icons/fi";
 import "./Sidebar.css";
 
 const Sidebar = ({ onLogout, onCollapse }) => {
@@ -41,17 +41,17 @@ const Sidebar = ({ onLogout, onCollapse }) => {
         { path: "/menu-management", icon: <LuMenu />, label: "Menu" },
         { path: "/inventory-management", icon: <LuPackage />, label: "Inventory" },
         { path: "/staff-management", icon: <LuUsers />, label: "Staff" },
-        //{ path: "/reports", icon: <LuBarChart3 />, label: "Reports" },
+        { path: "/reports", icon: <FiBarChart />, label: "Reports" },
         { path: "/customers", icon: <LuUser />, label: "Customers" },
         { path: "/offers", icon: <AiOutlinePercentage />, label: "Offers" },
-        { path: "/settings", icon: <LuSettings />, label: "Settings" },
+        //  { path: "/settings", icon: <LuSettings />, label: "Settings" },
     ];
 
     const userData = (() => {
         try {
             const data = localStorage.getItem("userData");
             return data ? JSON.parse(data) : { name: "Admin", role: "Manager" };
-        } catch (e) {
+        } catch {
             return { name: "Admin", role: "Manager" };
         }
     })();
@@ -62,7 +62,7 @@ const Sidebar = ({ onLogout, onCollapse }) => {
     };
 
     return (
-        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""} overflow-auto`}>
             {/* Logo Section */}
             <div className="sidebar-header">
                 <div className="logo-container">
@@ -90,9 +90,13 @@ const Sidebar = ({ onLogout, onCollapse }) => {
                             className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
                             title={isCollapsed ? item.label : ""}
                         >
-                            <span className="nav-icon">{item.icon}</span>
-                            {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                            {/*isActive && !isCollapsed && <div className="active-indicator" />*/}
+                            {({ isActive }) => (
+                                <>
+                                    <span className="nav-icon">{item.icon}</span>
+                                    {!isCollapsed && <span className="nav-label">{item.label}</span>}
+                                    {isActive && !isCollapsed && <div className="active-indicator" />}
+                                </>
+                            )}
                         </NavLink>
                     ))}
                 </div>

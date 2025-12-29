@@ -188,7 +188,7 @@ const AddStock = ({ isOpen, onClose, onSubmit }) => {
     { value: "spice", label: "Spice" },
     { value: "grain", label: "Grain" },
     { value: "dryfood", label: "Dryfood" },
-     { value: "other", label: "Other" },
+    { value: "other", label: "Other" },
   ];
 
   return (
@@ -227,8 +227,8 @@ const AddStock = ({ isOpen, onClose, onSubmit }) => {
             />
 
             {/* Category Selection */} {/*new */}
-             
-           <div className="flex flex-col space-y-1"> 
+
+            <div className="flex flex-col space-y-1">
               <label className="text-sm font-medium text-gray-700">
                 Category
                 <span className="text-red-500">*</span>
@@ -246,7 +246,7 @@ const AddStock = ({ isOpen, onClose, onSubmit }) => {
                   </option>
                 ))}
               </select>
-            </div>  
+            </div>
 
             {/* Quantity and Unit Fields */}
             <QuantityUnitInputs

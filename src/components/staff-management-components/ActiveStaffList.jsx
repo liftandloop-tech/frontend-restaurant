@@ -1,69 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllStaff, formatStaffList, getStatusDisplayInfo } from "../../utils/staff";
+import { formatStaffList, getStatusDisplayInfo } from "../../utils/staff";
+import { useGetAllStaffQuery } from "../../features/staff/staffApiSlice";
 import { LuUser } from "react-icons/lu";
 
 /**
  * Active Staff List component with search, filter, and table
  * Shows staff members with their roles, shifts, status, and actions
  */
-// const ActiveStaffList = ({ refreshTrigger = 0 }) => {
 const ActiveStaffList = ({ refreshTrigger = 0, onEdit, onManagePermissions }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [currentPage, setCurrentPage] = useState(1);
-  const [staffData, setStaffData] = useState([]);  //new
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
 
-  // Fetch staff data from API
+  // RTK Query hook
+  const { data: response, isLoading: loading, error, refetch } = useGetAllStaffQuery({
+    page: currentPage,
+    limit: 10,
+    search: searchTerm,
+    role: selectedRole === "All Roles" ? undefined : selectedRole,
+    isActive: 'true',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
+
+  // Handle manual refresh trigger
   useEffect(() => {
-    const fetchStaffData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    if (refreshTrigger > 0) {
+      refetch();
+    }
+  }, [refreshTrigger, refetch]);
 
-        const params = {
-          page: currentPage,
-          limit: 10,
-          search: searchTerm,
-          role: selectedRole === "All Roles" ? undefined : selectedRole,
-          isActive: 'true', // Only show active staff by default (as string)
-          sortBy: 'createdAt',
-          sortOrder: 'desc'
-        };
+  const staffData = useMemo(() => {
+    if (response?.data?.staff) {
+      return formatStaffList(response.data.staff);
+    }
+    return [];
+  }, [response]);
 
-        console.log('ActiveStaffList - API call params:', params);
-        const response = await getAllStaff(params);
-        console.log('ActiveStaffList - API response:', {
-          success: response.success,
-          data: response.data,
-          staffCount: response.data?.staff?.length || 0,
-          totalItems: response.data?.pagination?.totalItems || 0
-        });
-
-        const formattedStaff = formatStaffList(response.data.staff || []);
-        console.log('ActiveStaffList - Formatted staff:', formattedStaff.length);
-
-        setStaffData(formattedStaff);
-        setTotalPages(response.data.pagination?.totalPages || 1);
-        setTotalItems(response.data.pagination?.totalItems || 0);
-      } catch (err) {
-        console.error('Error fetching staff data:', err);
-        setError('Failed to load staff data. Please try again.');
-        setStaffData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    //   fetchStaffData();
-    // }, [currentPage, searchTerm, selectedRole, refreshTrigger]);
-    fetchStaffData();
-  }, [currentPage, searchTerm, selectedRole, refreshTrigger])
+  const totalPages = response?.data?.pagination?.totalPages || 1;
+  const totalItems = response?.data?.pagination?.totalItems || 0;
 
   const getRoleColor = (role) => {
     const colors = {
@@ -80,12 +57,10 @@ const ActiveStaffList = ({ refreshTrigger = 0, onEdit, onManagePermissions }) =>
   };
 
   const handleViewStaff = (staffId) => {
-    console.log("View staff:", staffId);
     navigate(`/staff-details/${staffId}`);
   };
 
   const handleEditStaff = (staffId) => {
-    console.log("Edit staff:", staffId);
     if (onEdit) {
       const staff = staffData.find(s => s._id === staffId);
       if (staff) onEdit(staff);
@@ -93,7 +68,6 @@ const ActiveStaffList = ({ refreshTrigger = 0, onEdit, onManagePermissions }) =>
   };
 
   const handleManagePermissions = (staffId) => {
-    console.log("Manage permissions:", staffId);
     if (onManagePermissions) {
       const staff = staffData.find(s => s._id === staffId);
       if (staff) onManagePermissions(staff);
@@ -217,7 +191,7 @@ const ActiveStaffList = ({ refreshTrigger = 0, onEdit, onManagePermissions }) =>
                     <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p>{error}</p>
+                    <p>Failed to load staff data</p>
                   </div>
                 </td>
               </tr>

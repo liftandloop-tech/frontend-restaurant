@@ -5,7 +5,9 @@ const TaxAndCharges = ({
   taxRate,
   serviceRate,
   includeServiceCharge,
+  includeTax,
   onToggleService,
+  onToggleTax,
 }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -14,19 +16,32 @@ const TaxAndCharges = ({
       </h2>
       <div className="space-y-3 text-sm text-gray-700">
         <div className="flex items-center justify-between">
-          <span>CGST</span>
+          <div className="flex items-center gap-3">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={includeTax}
+                onChange={onToggleTax}
+              />
+              <div
+                className={`w-10 h-6 rounded-full ${includeTax ? "bg-blue-500" : "bg-gray-300"
+                  }`}
+              ></div>
+            </label>
+            <span>CGST</span>
+          </div>
           <span className="font-medium text-gray-800">
             {(taxRate * 100 / 2).toFixed(1)}%
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>SGST</span>
+          <span className="ml-[52px]">SGST</span>
           <span className="font-medium text-gray-800">
             {(taxRate * 100 / 2).toFixed(1)}%
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>Service Charge</span>
           <div className="flex items-center gap-3">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -40,10 +55,11 @@ const TaxAndCharges = ({
                   }`}
               ></div>
             </label>
-            <span className="font-medium text-gray-800">
-              {(serviceRate * 100).toFixed(0)}%
-            </span>
+            <span>Service Charge</span>
           </div>
+          <span className="font-medium text-gray-800">
+            {(serviceRate * 100).toFixed(0)}%
+          </span>
         </div>
       </div>
     </div>
@@ -54,7 +70,9 @@ TaxAndCharges.propTypes = {
   taxRate: PropTypes.number.isRequired,
   serviceRate: PropTypes.number.isRequired,
   includeServiceCharge: PropTypes.bool.isRequired,
+  includeTax: PropTypes.bool.isRequired,
   onToggleService: PropTypes.func.isRequired,
+  onToggleTax: PropTypes.func.isRequired,
 };
 
 export default TaxAndCharges;

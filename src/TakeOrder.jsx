@@ -5,29 +5,27 @@ import Menu from "./components/take-order-components/Menu";
 import OrderSummary from "./components/take-order-components/OrderSummary";
 import Footer from "./components/take-order-components/Footer";
 import DiscountModal from "./components/take-order-components/DiscountModal";
-import { TAX_RATE, SERVICE_CHARGE_RATE } from "./utils/constants";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
-import { createOrder } from "./utils/orders";
-import { createKOT } from "./utils/kots";
-//import { getCustomers } from "./utils/customers";
-import {getCustomers} from "./utils/customers"
+
+// Redux / RTK Query imports
+import { useGetCustomersQuery } from "./features/customers/customersApiSlice";
+import { useCreateOrderMutation } from "./features/orders/ordersApiSlice";
+import { useCreateKOTMutation } from "./features/kots/kotsApiSlice";
+
 const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState(initialTableNumber || "");
   const [orderNotes, setOrderNotes] = useState("");
   const [discount, setDiscount] = useState(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  // Local UI state
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-   const [selectedStations, setSelectedStations] = useState([]);
-  // const [customers, setCustomers] = useState([]);
-  // const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  // const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-const [customers,setCustomers] = useState([])
-const [selectedCustomerId, setSelectedCustomerId] =useState("")
-const [customerSearchTerm, setCustomerSearchTerm] = useState("")
-const [selectedWaiterId, setSelectedWaiterId] = useState("")
+  const [selectedStations, setSelectedStations] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [selectedWaiterId, setSelectedWaiterId] = useState("");
 
   const [totals, setTotals] = useState({
     subtotal: 0,
@@ -37,14 +35,20 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
     total: 0,
   });
 
-  // Recalculate totals whenever the orderItems array or discount changes.
+  // RTK Query Hooks
+  const { data: customersResponse } = useGetCustomersQuery({ isActive: true });
+  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
+  const [createKOT, { isLoading: isCreatingKOT }] = useCreateKOTMutation();
+
+  const loading = isCreatingOrder || isCreatingKOT;
+  const customers = customersResponse?.data || [];
+
+  // Recalculate totals
   useEffect(() => {
-    // Use utility functions to compute all totals, for maintainability
     const subtotal = getSubtotal(orderItems);
     const tax = getTax(subtotal);
     const serviceCharge = getServiceCharge(subtotal);
-    
-    // Calculate discount
+
     let discountAmount = 0;
     if (discount) {
       if (discount.type === "percentage") {
@@ -52,75 +56,25 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
       } else {
         discountAmount = discount.value;
       }
-      // Ensure discount doesn't exceed subtotal
       discountAmount = Math.min(discountAmount, subtotal);
     }
-    
+
     const total = getTotal(subtotal, tax, serviceCharge) - discountAmount;
     setTotals({ subtotal, tax, serviceCharge, discount: discountAmount, total: Math.max(0, total) });
   }, [orderItems, discount]);
 
-  // Load customers for selection
-  // useEffect(() => {
-  //   const loadCustomers = async () => {
-  //     try {
-  //       const response = await getCustomers({ isActive: true });
-  //       if (response.success && response.data) {
-  //         setCustomers(response.data);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error loading customers:", err);
-  //     }
-  //   };
-
-  //   loadCustomers();
-  // }, []);
-
-  //laod customers for selection
-  useEffect(() => {
-    const loadCustomers = async () => {
-      try{
-        const response = await getCustomers({ isActive: true})
-        if(response.success && response.data){
-          setCustomers(response.data)
-        }
-      } catch (err) {
-        console.error("Error loading customer: ", err)
-      }
-    };
-    ;loadCustomers()
-  },[])
-
-  // Filter customers based on search term
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-    customer.phone.includes(customerSearchTerm)
-  );
-
-  /**
-   * Adds a new item to the order or increments the quantity if it already exists.
-   * @param {object} item - The menu item to add.
-   */
   const addToOrder = (item) => {
     setOrderItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.name === item.name);
       if (existingItem) {
-        // If item exists, return a new array with the updated quantity.
         return prevItems.map((i) =>
           i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      // If item is new, add it to the array with a quantity of 1.
       return [...prevItems, { ...item, quantity: 1 }];
     });
   };
 
-  /**
-   * Updates the quantity of an item in the order.
-   * If the new quantity is 0 or less, the item is removed.
-   * @param {string} itemName - The name of the item to update.
-   * @param {number} newQuantity - The new quantity.
-   */
   const updateQuantity = (itemName, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromOrder(itemName);
@@ -133,25 +87,15 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
     }
   };
 
-  /**
-   * Removes an item from the order completely.
-   * @param {string} itemName - The name of the item to remove.
-   */
   const removeFromOrder = (itemName) => {
     setOrderItems((prevItems) => prevItems.filter((i) => i.name !== itemName));
   };
 
-  /**
-   * Handle applying discount
-   */
   const handleApplyDiscount = (discountData) => {
     setDiscount(discountData);
     setIsDiscountModalOpen(false);
   };
 
-  /**
-   * Handle station selection in footer
-   */
   const handleStationToggle = (station) => {
     setSelectedStations((prev) => {
       if (prev.includes(station)) {
@@ -162,11 +106,7 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
     });
   };
 
-  /**
-   * Handle sending order to KOT (Kitchen Order Ticket)
-   */
   const handleSendToKOT = async () => {
-    // Validation
     if (orderItems.length === 0) {
       setError("Please add items to the order before sending to kitchen.");
       return;
@@ -177,17 +117,21 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
       return;
     }
 
+    const numericTableNumber = parseInt(tableNumber, 10);
+    if (isNaN(numericTableNumber) || numericTableNumber < 1) {
+      setError("Please enter a valid table number (must be a number greater than 0).");
+      return;
+    }
+
     if (selectedStations.length === 0) {
       setError("Please select at least one station (Kitchen, Bar, or Beverage).");
       return;
     }
 
-    setLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      // Step 1: Create the order
       const numericTableNumber = parseInt(tableNumber, 10);
       const orderData = {
         tableNumber: numericTableNumber,
@@ -197,28 +141,23 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
           price: item.price,
           specialInstructions: item.specialInstructions || item.note || undefined,
         })),
-        notes: orderNotes.trim(),
+        notes: orderNotes.trim() || undefined,
         discount: discount || undefined,
-        source: "dine-in",
-        customerId: selectedCustomerId && selectedCustomerId.trim() !== "" ? selectedCustomerId : null,
-        customerName: null, // Not required for dine-in
-        customerPhone: null, // Not required for dine-in
-        waiterId: selectedWaiterId && selectedWaiterId.trim() !== "" ? selectedWaiterId : null
+        source: "dine-in"
       };
 
-      // Validate customerId - must be a 24-character hex string or undefined
-      if (orderData.customerId && (!/^[a-fA-F0-9]{24}$/.test(orderData.customerId))) {
-        console.error('Invalid customerId:', orderData.customerId);
-        delete orderData.customerId; // Remove invalid customerId
+      // Only add customerId if it's a valid ObjectId
+      if (selectedCustomerId && selectedCustomerId.trim() !== "" && /^[a-fA-F0-9]{24}$/.test(selectedCustomerId)) {
+        orderData.customerId = selectedCustomerId;
       }
 
-      // Validate waiterId - must be a 24-character hex string or undefined
-      if (orderData.waiterId && (!/^[a-fA-F0-9]{24}$/.test(orderData.waiterId))) {
-        console.error('Invalid waiterId:', orderData.waiterId);
-        delete orderData.waiterId; // Remove invalid waiterId
+      // Only add waiterId if it's a valid ObjectId
+      if (selectedWaiterId && selectedWaiterId.trim() !== "" && /^[a-fA-F0-9]{24}$/.test(selectedWaiterId)) {
+        orderData.waiterId = selectedWaiterId;
       }
 
-      const orderResponse = await createOrder(orderData);
+      // Create Order
+      const orderResponse = await createOrder(orderData).unwrap();
 
       if (!orderResponse.success || !orderResponse.data?._id) {
         throw new Error("Failed to create order");
@@ -226,6 +165,7 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
 
       const orderId = orderResponse.data._id;
 
+      // Persist table order context
       if (typeof window !== "undefined") {
         try {
           const raw = localStorage.getItem("tableOrders");
@@ -241,23 +181,21 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
         }
       }
 
-      // Step 2: Create KOTs for each selected station, or default to kitchen if none selected
+      // Create KOTs
       const stationsToCreate = selectedStations.length > 0 ? selectedStations : ['kitchen'];
       const kotPromises = stationsToCreate.map((station) =>
-        createKOT(orderId, station)
+        createKOT({ orderId, station }).unwrap()
       );
 
-      const kotResponses = await Promise.all(kotPromises);
+      await Promise.all(kotPromises);
 
-      // Success
-      const stationsMessage = selectedStations.length > 0 
-        ? selectedStations.join(", ") 
+      const stationsMessage = selectedStations.length > 0
+        ? selectedStations.join(", ")
         : "kitchen (default)";
       setSuccess(
         `Order created successfully! KOTs sent to: ${stationsMessage}`
       );
 
-      // Reset form after 2 seconds
       setTimeout(() => {
         setOrderItems([]);
         setTableNumber("");
@@ -269,59 +207,42 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
       }, 2000);
     } catch (error) {
       console.error("Error creating order/KOT:", error);
-      
-      // Handle authentication errors
-      if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          // Redirect is already happening from api.js
-          return;
-        }
-        
+
+      const errorMessage = error.data?.message || error.message || "Failed to create order and send KOT.";
+
+      if (errorMessage.includes('expired') || errorMessage.includes('Token')) {
         setError("Your session has expired. Please login again.");
         setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
+          // Let auth utils handle redirect if possible, or do it manually
           window.location.href = '/login';
         }, 2000);
-      } else if (error.status === 400 && error.validationErrors && error.validationErrors.length > 0) {
-        // Handle validation errors
-        const validationMessages = error.validationErrors.map(err => {
-          const field = err.field || 'unknown';
-          const message = err.message || 'Invalid value';
-          const formattedField = field.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          return `${formattedField}: ${message}`;
+      } else if (error.status === 400 && error.data?.errors) {
+        const validationMessages = error.data.errors.map(err => {
+          return `${err.field}: ${err.message}`;
         });
         setError(`Validation failed:\n${validationMessages.join('\n')}`);
       } else {
-        // Other errors
-        setError(
-          error.message ||
-            "Failed to create order and send KOT. Please try again."
-        );
+        setError(errorMessage);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
-  /**
-   * Handle saving draft
-   */
   const handleSaveDraft = async () => {
-    // Validation - at least table number is required for drafts
     if (!tableNumber || tableNumber.trim() === "") {
       setError("Please enter a table number to save draft.");
       return;
     }
 
-    setLoading(true);
+    const numericTableNumber = parseInt(tableNumber, 10);
+    if (isNaN(numericTableNumber) || numericTableNumber < 1) {
+      setError("Please enter a valid table number (must be a number greater than 0).");
+      return;
+    }
+
     setError("");
     setSuccess("");
 
     try {
-      // Step 1: Create the order as draft
       const numericTableNumber = parseInt(tableNumber, 10);
       const orderData = {
         tableNumber: numericTableNumber,
@@ -331,27 +252,23 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
           price: item.price,
           specialInstructions: item.specialInstructions || item.note || undefined,
         })),
-        notes: orderNotes.trim(),
+        notes: orderNotes.trim() || undefined,
         discount: discount || undefined,
         source: "dine-in",
-        customerId: selectedCustomerId && selectedCustomerId.trim() !== "" ? selectedCustomerId : undefined,
-        waiterId: selectedWaiterId && selectedWaiterId.trim() !== "" ? selectedWaiterId : undefined,
-        status: "draft" // Set status to draft
+        status: "draft"
       };
 
-      // Validate customerId - must be a 24-character hex string or undefined
-      if (orderData.customerId && (!/^[a-fA-F0-9]{24}$/.test(orderData.customerId))) {
-        console.error('Invalid customerId:', orderData.customerId);
-        delete orderData.customerId; // Remove invalid customerId
+      // Only add customerId if it's a valid ObjectId
+      if (selectedCustomerId && selectedCustomerId.trim() !== "" && /^[a-fA-F0-9]{24}$/.test(selectedCustomerId)) {
+        orderData.customerId = selectedCustomerId;
       }
 
-      // Validate waiterId - must be a 24-character hex string or undefined
-      if (orderData.waiterId && (!/^[a-fA-F0-9]{24}$/.test(orderData.waiterId))) {
-        console.error('Invalid waiterId:', orderData.waiterId);
-        delete orderData.waiterId; // Remove invalid waiterId
+      // Only add waiterId if it's a valid ObjectId
+      if (selectedWaiterId && selectedWaiterId.trim() !== "" && /^[a-fA-F0-9]{24}$/.test(selectedWaiterId)) {
+        orderData.waiterId = selectedWaiterId;
       }
 
-      const orderResponse = await createOrder(orderData);
+      const orderResponse = await createOrder(orderData).unwrap();
 
       if (!orderResponse.success || !orderResponse.data?._id) {
         throw new Error("Failed to save draft order");
@@ -359,7 +276,6 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
 
       setSuccess("Draft order saved successfully!");
 
-      // Reset form after 2 seconds
       setTimeout(() => {
         setOrderItems([]);
         setTableNumber("");
@@ -374,36 +290,10 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
       }, 2000);
     } catch (error) {
       console.error("Error saving draft order:", error);
-
-      // Handle authentication errors
-      if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          // Redirect is already happening from api.js
-          return;
-        }
-
-        setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setError(
-          error.message ||
-          "Failed to save draft order. Please try again."
-        );
-      }
-    } finally {
-      setLoading(false);
+      setError(error.data?.message || error.message || "Failed to save draft order.");
     }
   };
 
-  /**
-   * Handle cancel
-   */
   const handleCancel = () => {
     if (
       orderItems.length > 0 &&
@@ -425,7 +315,6 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
     onClose();
   };
 
-  // Do not render the component if the 'show' prop is false.
   if (!show) {
     return null;
   }
@@ -433,8 +322,8 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
   return (
     <div className="fixed inset-0 bg-white/20 backdrop-blur-lg bg-opacity-25 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
-        <Header 
-          onClose={onClose} 
+        <Header
+          onClose={onClose}
           tableNumber={tableNumber}
           selectedWaiterId={selectedWaiterId}
           onWaiterChange={setSelectedWaiterId}
@@ -443,7 +332,6 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
           <div className="w-2/3 p-6 overflow-y-auto scrollbar-hide">
             <Menu onAddToOrder={addToOrder} />
           </div>
-          {/* Right Panel: Order Summary - Padding has been removed from this container */}
           <div className="w-1/3 bg-gray-50 border-l border-gray-200 flex flex-col h-full">
             <OrderSummary
               orderItems={orderItems}
@@ -476,7 +364,6 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
           onStationToggle={handleStationToggle}
         />
 
-        {/* Discount Modal */}
         <DiscountModal
           isOpen={isDiscountModalOpen}
           onClose={() => setIsDiscountModalOpen(false)}
@@ -488,10 +375,10 @@ const [selectedWaiterId, setSelectedWaiterId] = useState("")
   );
 };
 
-// PropTypes validation for the TakeOrder component.
 TakeOrder.propTypes = {
   show: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  tableNumber: PropTypes.string,
 };
 
 export default TakeOrder;

@@ -48,9 +48,11 @@ const CustomerDetails = ({
     id: customer?.id || "#CU001",
     name: customer?.name || "Rajesh Kumar",
     profileImage: null,
-    badges: customer?.status
-      ? [customer.status, "Regular", "Loyalty Member"]
-      : ["VIP", "Regular", "Loyalty Member"],
+    badges: [
+      customer?.isVIP ? "VIP" : "Regular",
+      customer?.revenueCardEnabled ? "Revenue Card" : null,
+      "Loyalty Member"
+    ].filter(Boolean),
     phone: customer?.phone || "+91 98765 43210",
     email: customer?.email || "rajesh@email.com",
     dateOfBirth: "March 15, 1985",

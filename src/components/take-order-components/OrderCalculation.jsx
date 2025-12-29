@@ -21,8 +21,12 @@ const OrderCalculation = ({ totals, discount }) => {
         </div>
       )}
       <div className="flex justify-between text-sm text-gray-600">
-        <span>Tax (18%)</span>
-        <span>₹{tax.toFixed(2)}</span>
+        <span>CGST</span>
+        <span>₹{(tax / 2).toFixed(2)}</span>
+      </div>
+      <div className="flex justify-between text-sm text-gray-600">
+        <span>SGST</span>
+        <span>₹{(tax / 2).toFixed(2)}</span>
       </div>
       <div className="flex justify-between text-sm text-gray-600 items-center">
         <div>
@@ -43,14 +47,12 @@ const OrderCalculation = ({ totals, discount }) => {
                 onChange={() => setServiceChargeEnabled(!serviceChargeEnabled)}
               />
               <div
-                className={`block w-10 h-6 rounded-full ${
-                  serviceChargeEnabled ? "bg-blue-500" : "bg-gray-300"
-                }`}
+                className={`block w-10 h-6 rounded-full ${serviceChargeEnabled ? "bg-blue-500" : "bg-gray-300"
+                  }`}
               ></div>
               <div
-                className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
-                  serviceChargeEnabled ? "transform translate-x-full" : ""
-                }`}
+                className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${serviceChargeEnabled ? "transform translate-x-full" : ""
+                  }`}
               ></div>
             </div>
           </label>

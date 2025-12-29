@@ -12,9 +12,9 @@ import ReceiptOptions from "./components/close-table-components/ReceiptOptions";
 import FooterBar from "./components/close-table-components/FooterBar";
 import { TAX_RATE, SERVICE_CHARGE_RATE } from "./utils/constants";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
-import { getOrderById, getOrders, updateOrderStatus } from "./utils/orders";
-import { createBill, processPayment, printBill as printBillAPI, getBillById } from "./utils/bills";
-import { updateTableStatus, getTables } from "./utils/tables";
+import { useGetOrderByIdQuery, useGetOrdersQuery, useUpdateOrderStatusMutation } from "./features/orders/ordersApiSlice";
+import { useCreateBillMutation, useProcessPaymentMutation } from "./features/bills/billsApiSlice";
+import { useUpdateTableStatusMutation, useGetTablesQuery } from "./features/tables/tablesApiSlice";
 
 const CloseTable = () => {
   const navigate = useNavigate();
@@ -72,8 +72,9 @@ const CloseTable = () => {
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [discount, setDiscount] = useState(0); // absolute value
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipAmount] = useState(0); // setTipAmount was unused
   const [includeServiceCharge, setIncludeServiceCharge] = useState(true);
+  const [includeTax, setIncludeTax] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("cash"); // cash|card|upi|wallet
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -85,6 +86,16 @@ const CloseTable = () => {
     serverName: "Staff",
   });
 
+  // RTK Query Hooks
+  const { data: orderByIdData } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+  const { data: ordersByTableData } = useGetOrdersQuery({ tableNumber: parseInt(tableNumber) }, { skip: !!orderId || !tableNumber });
+  const { data: allTablesData } = useGetTablesQuery(undefined, { skip: !localStorage.getItem('authToken') });
+
+  const [updateOrderStatusApi] = useUpdateOrderStatusMutation();
+  const [createBillApi] = useCreateBillMutation();
+  const [processPaymentApi] = useProcessPaymentMutation();
+  const [updateTableStatusApi] = useUpdateTableStatusMutation();
+
   useEffect(() => {
     if (tableNumber) {
       setTableInfo((prev) => ({
@@ -94,112 +105,72 @@ const CloseTable = () => {
     }
   }, [tableNumber]);
 
-  // Fetch order data on component mount
+  // Handle data mapping from RTK Query
   useEffect(() => {
-    const fetchOrderData = async () => {
-      try {
-        if (orderId) {
-          // Fetch order by ID
-          const response = await getOrderById(orderId);
-          if (response.success && response.data) {
-            const orderData = response.data;
-            setOrder(orderData);
-
-            // Convert order items to component format
-            const formattedItems = orderData.items.map((item, index) => ({
-              id: index + 1,
-              name: item.name,
-              note: item.specialInstructions || "",
-              quantity: item.qty,
-              price: item.price,
-            }));
-            setItems(formattedItems);
-            setDiscount(orderData.discount || 0);
-
-            // Update table info
-            setTableInfo({
-              tableCode: `T${orderData.tableNumber}`,
-              seats: 4, // Default, can be fetched from table data
-              orderKots: 1,
-              serverName: orderData.waiterId?.name || "Staff",
-            });
-          }
-        } else if (tableNumber) {
-          // Fetch orders by table number
-          const response = await getOrders({ tableNumber: parseInt(tableNumber) });
-          if (response.success && response.data && response.data.length > 0) {
-            const relevantStatuses = ["pending", "confirmed", "preparing", "ready", "served"];
-            const activeOrders = response.data
-              .filter((ord) => relevantStatuses.includes(ord.status))
-              .sort((a, b) => {
-                const aDate = new Date(a.updatedAt || a.createdAt || 0).getTime();
-                const bDate = new Date(b.updatedAt || b.createdAt || 0).getTime();
-                return bDate - aDate;
-              });
-
-            if (activeOrders.length === 0) {
-              setError("No active orders found for this table yet. Please ensure the order has been sent to KOT.");
-              return;
-            }
-
-            const orderData = activeOrders[0];
-            setOrder(orderData);
-
-            const formattedItems = orderData.items.map((item, index) => ({
-              id: index + 1,
-              name: item.name,
-              note: item.specialInstructions || "",
-              quantity: item.qty,
-              price: item.price,
-            }));
-            setItems(formattedItems);
-            setDiscount(orderData.discount || 0);
-
-            setTableInfo({
-              tableCode: `T${orderData.tableNumber}`,
-              seats: 4,
-              orderKots: 1,
-              serverName: orderData.waiterId?.name || "Staff",
-            });
-          } else {
-            setError("No orders found for this table.");
-          }
-        } else {
-          setError("No table context found. Please open Close Table from a specific table after sending the order to KOT.");
-        }
-      } catch (error) {
-        console.error("Error fetching order:", error);
-        setError(error.message || "Failed to fetch order data.");
+    let orderData = null;
+    if (orderId && orderByIdData?.success) {
+      orderData = orderByIdData.data;
+    } else if (tableNumber && ordersByTableData?.success && ordersByTableData.data.length > 0) {
+      const relevantStatuses = ["pending", "confirmed", "preparing", "ready", "served"];
+      const activeOrders = ordersByTableData.data
+        .filter((ord) => relevantStatuses.includes(ord.status))
+        .sort((a, b) => {
+          const aDate = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const bDate = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return bDate - aDate;
+        });
+      if (activeOrders.length > 0) {
+        orderData = activeOrders[0];
       }
-    };
+    }
 
-    fetchOrderData();
-  }, [orderId, tableNumber]);
+    if (orderData) {
+      setOrder(orderData);
+      const formattedItems = orderData.items.map((item, index) => ({
+        id: index + 1,
+        name: item.name,
+        note: item.specialInstructions || "",
+        quantity: item.qty,
+        price: item.price,
+      }));
+      setItems(formattedItems);
+      setDiscount(orderData.discount || 0);
+
+      setTableInfo({
+        tableCode: `T${orderData.tableNumber}`,
+        seats: 4,
+        orderKots: 1,
+        serverName: orderData.waiterId?.name || "Staff",
+      });
+    }
+  }, [orderId, tableNumber, orderByIdData, ordersByTableData]);
 
   // Calculates subtotal, tax, service charge, and final amount to pay for the order.
   const calculations = useMemo(() => {
     // Use order totals if available, otherwise calculate from items
     if (order) {
       const subtotal = order.subtotal || getSubtotal(items);
-      const tax = order.tax || getTax(subtotal, discount);
-      const serviceCharge = includeServiceCharge ? getServiceCharge(subtotal, includeServiceCharge) : 0;
-      const totalPayable = subtotal - discount + tax + serviceCharge + tipAmount;
-      return { subtotal, tax, serviceCharge, totalPayable };
+      const taxAmount = order.tax || getTax(subtotal, discount);
+      const tax = includeTax ? taxAmount : 0;
+      const serviceChargeResult = includeServiceCharge ? getServiceCharge(subtotal, includeServiceCharge) : 0;
+      const totalPayable = subtotal - discount + tax + serviceChargeResult + tipAmount;
+      return { subtotal, tax, serviceCharge: serviceChargeResult, totalPayable };
     }
 
     // Fallback calculation
     const subtotal = getSubtotal(items);
-    const tax = getTax(subtotal, discount);
-    const serviceCharge = getServiceCharge(subtotal, includeServiceCharge);
+    const taxAmount = getTax(subtotal, discount);
+    const tax = includeTax ? taxAmount : 0;
+    const serviceChargeResult = getServiceCharge(subtotal, includeServiceCharge);
     const totalPayable = getTotal(
       subtotal,
       tax,
-      serviceCharge,
+      serviceChargeResult,
       tipAmount,
       discount
     );
-    return { subtotal, tax, serviceCharge, totalPayable };
-  }, [items, discount, includeServiceCharge, tipAmount, order]);
+    return { subtotal, tax, serviceCharge: serviceChargeResult, totalPayable };
+  }, [items, discount, includeServiceCharge, includeTax, tipAmount, order]);
 
   // Updates the quantity of a specific item. If set to 0, remove the item.
   const updateQty = (id, nextQty) => {
@@ -243,11 +214,11 @@ const CloseTable = () => {
     try {
       // Step 1: Ensure order status is 'served' (required for billing)
       if (order.status !== 'served') {
-        await updateOrderStatus(order._id, 'served');
+        await updateOrderStatusApi({ orderId: order._id, status: 'served' }).unwrap();
       }
 
       // Step 2: Create bill
-      const billResponse = await createBill(order._id);
+      const billResponse = await createBillApi({ orderId: order._id }).unwrap();
       if (!billResponse.success || !billResponse.data?._id) {
         throw new Error("Failed to create bill");
       }
@@ -265,13 +236,14 @@ const CloseTable = () => {
             return v.toString(16);
           });
         };
-        const paymentId = generateUUID()
-        paymentResponse = await processPayment(billId, {
-          paymentId,
+        const paymentIdValue = generateUUID()
+        paymentResponse = await processPaymentApi({
+          billId,
+          paymentId: paymentIdValue,
           paymentMethod: paymentMethod,
           transactionId: paymentMethod === 'cash' ? undefined : `TXN-${Date.now()}`,
           gatewayResponse: paymentMethod === 'cash' ? undefined : { status: 'success' }
-        });
+        }).unwrap();
 
         if (!paymentResponse.success) {
           throw new Error("Failed to process payment");
@@ -280,23 +252,16 @@ const CloseTable = () => {
 
       // Step 4: Update table status to 'available'
       let targetTableId = tableId;
-      if (!targetTableId && tableNumber) {
-        try {
-          const tablesResponse = await getTables();
-          if (tablesResponse.success && tablesResponse.data) {
-            const table = tablesResponse.data.find(t => t.tableNumber === parseInt(tableNumber));
-            if (table) {
-              targetTableId = table._id;
-            }
-          }
-        } catch (fetchErr) {
-          console.warn("Failed to fetch table details to update status:", fetchErr);
+      if (!targetTableId && tableNumber && allTablesData?.success) {
+        const table = allTablesData.data.find(t => t.tableNumber === parseInt(tableNumber));
+        if (table) {
+          targetTableId = table._id;
         }
       }
 
       if (targetTableId) {
         try {
-          await updateTableStatus(targetTableId, 'available');
+          await updateTableStatusApi({ tableId: targetTableId, status: 'available' }).unwrap();
         } catch (tableError) {
           console.warn("Failed to update table status:", tableError);
           // Don't fail the whole process if table update fails
@@ -337,11 +302,11 @@ const CloseTable = () => {
       setTimeout(() => {
         navigate('/restaurant-tables');
       }, 2000);
-    } catch (error) {
-      console.error("Error closing table:", error);
+    } catch (err) {
+      console.error("Error closing table:", err);
 
       // Handle permission errors (403)
-      if (error.status === 403 || error.message.includes('Access denied') || error.message.includes('Insufficient permissions')) {
+      if (err.status === 403 || err.message?.includes('Access denied') || err.message?.includes('Insufficient permissions')) {
         const userDataStr = localStorage.getItem('userData');
         let userRole = 'Unknown';
         try {
@@ -349,26 +314,13 @@ const CloseTable = () => {
             const userData = JSON.parse(userDataStr);
             userRole = userData.role || 'Unknown';
           }
-        } catch (e) {
-          // Ignore parse errors
+        } catch (parseErr) {
+          console.error("Error parsing user data:", parseErr);
         }
         setError(`Access Denied: You don't have permission to create bills.\n\nRequired roles: Owner, Admin, Manager, or Cashier\nYour role: ${userRole}\n\nPlease contact your administrator to get the required permissions.`);
       }
-      // Handle authentication errors
-      else if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          return;
-        }
-        setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-          navigate('/login');
-        }, 2000);
-      } else {
-        setError(error.message || "Failed to close table and print bill. Please try again.");
+      else {
+        setError(err.data?.message || err.message || "Failed to close table and print bill. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -413,8 +365,8 @@ const CloseTable = () => {
       // const customerName = billData.customerId?.name || billData.customerId || 'Walk-in Customer';
       // const customerPhone = billData.customerId?.phone || '';
 
-      const customerName = billData.customerId?.name || billData.customerId || 'Walk-in Customer';
-      const customerPhone = billData.customerId?.phone || ''
+      const customerName = billData.customerId?.name || billData.orderId?.customerName || order?.customerName || 'Walk-in Customer';
+      const customerPhone = billData.customerId?.phone || billData.orderId?.customerPhone || order?.customerPhone || '';
 
 
       const subtotal = billData.subtotal || calculations.subtotal || 0;
@@ -513,7 +465,8 @@ const CloseTable = () => {
             <div class="bill-info">
               <div><span>Subtotal:</span> <span>₹${subtotal.toFixed(2)}</span></div>
               ${billDiscount > 0 ? `<div><span>Discount:</span> <span>-₹${billDiscount.toFixed(2)}</span></div>` : ''}
-              <div><span>Tax (18%):</span> <span>₹${tax.toFixed(2)}</span></div>
+              <div><span>CGST:</span> <span>₹${(tax / 2).toFixed(2)}</span></div>
+              <div><span>SGST:</span> <span>₹${(tax / 2).toFixed(2)}</span></div>
               ${serviceCharge > 0 ? `<div><span>Service Charge:</span> <span>₹${serviceCharge.toFixed(2)}</span></div>` : ''}
               ${tipAmount > 0 ? `<div><span>Tip:</span> <span>₹${tipAmount.toFixed(2)}</span></div>` : ''}
             </div>
@@ -611,7 +564,9 @@ const CloseTable = () => {
               taxRate={TAX_RATE}
               serviceRate={SERVICE_CHARGE_RATE}
               includeServiceCharge={includeServiceCharge}
+              includeTax={includeTax}
               onToggleService={() => setIncludeServiceCharge((v) => !v)}
+              onToggleTax={() => setIncludeTax((v) => !v)}
             />
             <PaymentMethods value={paymentMethod} onChange={setPaymentMethod} />
             {paymentMethod === "upi" && <UpiOptions />}

@@ -30,6 +30,9 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
       country: "",
     },
     notes: "",
+    isVIP: false,
+    revenueCardEnabled: false,
+    revenueCardNumber: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -38,7 +41,7 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.startsWith("address.")) {
       const addressField = name.split(".")[1];
       setFormData((prev) => ({
@@ -49,12 +52,13 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
         },
       }));
     } else {
+      const inputValue = e.target.type === "checkbox" ? e.target.checked : value;
       setFormData((prev) => ({
         ...prev,
-        [name]: value,
+        [name]: inputValue,
       }));
     }
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
@@ -67,21 +71,21 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name || formData.name.trim() === "") {
       newErrors.name = "Name is required";
     }
-    
+
     if (!formData.phone || formData.phone.trim() === "") {
       newErrors.phone = "Phone number is required";
-    } else if (!/^[\d\s\+\-\(\)]+$/.test(formData.phone)) {
+    } else if (!/^[\d\s+\-()]+$/.test(formData.phone)) {
       newErrors.phone = "Please enter a valid phone number";
     }
-    
+
     if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,7 +93,7 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -107,6 +111,9 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
           ? formData.address
           : undefined,
         notes: formData.notes ? formData.notes.trim() : undefined,
+        isVIP: formData.isVIP,
+        revenueCardEnabled: formData.revenueCardEnabled,
+        revenueCardNumber: formData.revenueCardEnabled ? formData.revenueCardNumber.trim() : undefined,
       };
 
       // Remove undefined fields
@@ -135,6 +142,9 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
           country: "",
         },
         notes: "",
+        isVIP: false,
+        revenueCardEnabled: false,
+        revenueCardNumber: "",
       });
       setErrors({});
     } catch (error) {
@@ -180,7 +190,7 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
           </button>
         </div>
 
-          {/* Form Content */}
+        {/* Form Content */}
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-6">
             {/* Error Message */}
@@ -215,9 +225,8 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Enter customer name"
-                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.name ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name ? "border-red-300" : "border-gray-300"
+                      }`}
                     required
                   />
                   {errors.name && (
@@ -236,9 +245,8 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="+91 98765 43210"
-                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.phone ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? "border-red-300" : "border-gray-300"
+                      }`}
                     required
                   />
                   {errors.phone && (
@@ -257,9 +265,8 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="customer@email.com"
-                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.email ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-300" : "border-gray-300"
+                      }`}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -278,6 +285,49 @@ const AddCustomer = ({ isOpen, onClose, onSubmit, error: externalError, success:
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+
+                {/* VIP and Revenue Card */}
+                <div className="md:col-span-2 flex flex-col sm:flex-row gap-6 mt-2">
+                  <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg flex-1 border border-blue-100">
+                    <input
+                      type="checkbox"
+                      id="isVIP"
+                      name="isVIP"
+                      checked={formData.isVIP}
+                      onChange={handleInputChange}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="isVIP" className="text-sm font-semibold text-blue-900 cursor-pointer">
+                      Mark as VIP Customer
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-3 bg-purple-50 p-3 rounded-lg flex-1 border border-purple-100">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="revenueCardEnabled"
+                        name="revenueCardEnabled"
+                        checked={formData.revenueCardEnabled}
+                        onChange={handleInputChange}
+                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                      />
+                      <label htmlFor="revenueCardEnabled" className="text-sm font-semibold text-purple-900 cursor-pointer">
+                        Enable Revenue Card
+                      </label>
+                    </div>
+                    {formData.revenueCardEnabled && (
+                      <input
+                        type="text"
+                        name="revenueCardNumber"
+                        value={formData.revenueCardNumber}
+                        onChange={handleInputChange}
+                        placeholder="Scan or Enter Card Number"
+                        className="w-full px-3 py-1.5 border border-purple-300 rounded-md text-xs focus:ring-purple-500"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

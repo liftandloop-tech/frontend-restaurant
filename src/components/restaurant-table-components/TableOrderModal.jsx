@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { FiX, FiUser, FiMapPin, FiClock, FiPhone, FiMail, FiShoppingCart, FiDollarSign } from "react-icons/fi";
 
 const TableOrderModal = ({ isOpen, onClose, tableNumber, order }) => {
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   if (!isOpen || !order) return null;
 

@@ -5,36 +5,24 @@
  * Includes automatic token refresh on 401 errors
  */
 
-// Backend server URL - Change this if your backend is on a different port
-const BASE_URL = 'http://localhost:3000/api/v1';
+// Backend server URL from environment variable
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 // Flag to prevent infinite refresh loops
 let isRefreshing = false;
 let refreshPromise = null;
 
 // token exoiration check - refresh 5 minute before  expiry
- // const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000;
+// const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000;
 /** check if token is closed to expirin
  * @param {Date} token - jwt Token 
  * @returns {boolean} True if token needs refresh
  */
-// const isTokenExpiringSoon = (token) =>{
-//  if(!token) return true;
-//   try{
-//     const payload = JSON.parse(atob(token.split('.')[1]));
-//     const expiryTime = payload.exp * 1000;// convert to milliseconds
-//     const currentTime = Date.now();
-//     return (expiryTime - currentTime) <= TOKEN_REFRESH_BUFFER;
-  
-//   } catch (error){
-//     return true; // if we cant find assume it needs refresh
-//   }
-//  } ;
 
- /**
- * Refresh access token
- * @returns {Promise<string>} New access token
- */
+/**
+* Refresh access token
+* @returns {Promise<string>} New access token
+*/
 const refreshAccessToken = async () => {
   if (isRefreshing && refreshPromise) {
     return refreshPromise;
@@ -44,7 +32,7 @@ const refreshAccessToken = async () => {
   refreshPromise = (async () => {
     try {
       const refreshTokenValue = localStorage.getItem('refreshToken');
-      
+
       if (!refreshTokenValue) {
         throw new Error('No refresh token available');
       }
@@ -75,7 +63,7 @@ const refreshAccessToken = async () => {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userData');
       localStorage.removeItem('isAuthenticated');
-      
+
       // Redirect to login if we're in the browser
       if (typeof window !== 'undefined') {
         // Use setTimeout to ensure error is thrown before redirect
@@ -83,7 +71,7 @@ const refreshAccessToken = async () => {
           window.location.href = '/login';
         }, 100);
       }
-      
+
       throw error;
     } finally {
       isRefreshing = false;
@@ -103,165 +91,151 @@ const refreshAccessToken = async () => {
  * @returns {Promise} Response from backend
  */
 export const apiCall = async (endpoint, method = 'GET', data = null, retry = true) => {
-  try {
-    // Build the full URL
-    const url = `${BASE_URL}/${endpoint}`;
-    
-    // Get token from localStorage (if user is logged in)
-    let token = localStorage.getItem('authToken');
+  // function body without try catch
+  // Build the full URL
+  const url = `${BASE_URL}/${endpoint}`;
 
-    // Check if token exists and is expiring soon - refresh proactively
-    // if (token && isTokenExpiringSoon(token)) {
-    //   try {
-    //     console.log('Token expiring soon, refreshing...');
-    //     token = await refreshAccessToken();
-    //   } catch (refreshError) {
-    //     console.log('Token refresh failed:', refreshError);
-    //     // If refresh fails, token will be null and will trigger 401 error
-    //     token = null;
-    //   }
-    // }
-    // Prepare request options
-    const options = {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
+  // Get token from localStorage (if user is logged in)
+  let token = localStorage.getItem('authToken');
 
-    // Add token to header if available
-    if (token) {
-      options.headers['Authorization'] = `Bearer ${token}`;
-    }
+  // Prepare request options
+  const options = {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
 
-    // Add data for POST/PUT/PATCH requests
-    if (data) {
-      options.body = JSON.stringify(data);
-    }
+  // Add token to header if available
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
 
-    // Send request to backend
-    const response = await fetch(url, options);
-    
-    // Get response data
-    const result = await response.json();
+  // Add data for POST/PUT/PATCH requests
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
 
-    // Handle 401 Unauthorized - Token expired or invalid
-    if (response.status === 401 && retry && endpoint !== 'users/refresh-token' && endpoint !== 'users/user/login') {
-      const errorMessage = result.message || 'Unauthorized';
-      console.log('401 Error for endpoint:', endpoint, 'Message:', errorMessage);
-      
-      // If token expired, try to refresh
-      if (errorMessage.includes('expired') || errorMessage.includes('Token')) {
-        try {
-          // Refresh the token
-          const newToken = await refreshAccessToken();
-          
-          // Retry the original request with new token
-          options.headers['Authorization'] = `Bearer ${newToken}`;
-          const retryResponse = await fetch(url, options);
-          const retryResult = await retryResponse.json();
-          
-          if (!retryResponse.ok) {
-            const error = new Error(retryResult.message || 'Request failed after token refresh');
-            error.response = retryResult;
-            error.status = retryResponse.status;
-            throw error;
-          }
-          
-          return retryResult;
-        } catch (refreshError) {
-          // Refresh failed - tokens cleared and redirect initiated
-          // Create a special error that indicates redirect is happening
-          const error = new Error('Session expired. Redirecting to login...');
-          error.response = result;
-          error.status = 401;
-          error.isRefreshFailure = true; // Flag to indicate refresh failed
+  // Send request to backend
+  const response = await fetch(url, options);
+
+  // Get response data
+  const result = await response.json();
+
+  // Handle 401 Unauthorized - Token expired or invalid
+  if (response.status === 401 && retry && endpoint !== 'users/refresh-token' && endpoint !== 'users/user/login') {
+    const errorMessage = result.message || 'Unauthorized';
+    console.log('401 Error for endpoint:', endpoint, 'Message:', errorMessage);
+
+    // If token expired, try to refresh
+    if (errorMessage.includes('expired') || errorMessage.includes('Token')) {
+      try {
+        // Refresh the token
+        const newToken = await refreshAccessToken();
+
+        // Retry the original request with new token
+        options.headers['Authorization'] = `Bearer ${newToken}`;
+        const retryResponse = await fetch(url, options);
+        const retryResult = await retryResponse.json();
+
+        if (!retryResponse.ok) {
+          const error = new Error(retryResult.message || 'Request failed after token refresh');
+          error.response = retryResult;
+          error.status = retryResponse.status;
           throw error;
         }
-      } else {
-        // Other 401 errors (invalid token, no token, etc.)
-        console.log('401 Error - No refresh attempted:', errorMessage);
 
-        // If it's "No token provided", clear authentication state
-        if (errorMessage.includes('No token provided')) {
-          console.log('Clearing authentication state due to missing token');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-
-          // Redirect to login if we're in the browser
-          if (typeof window !== 'undefined') {
-            setTimeout(() => {
-              window.location.href = '/login';
-            }, 100);
-          }
-        }
-
-        const error = new Error(errorMessage);
+        return retryResult;
+      } catch (refreshError) {
+        console.error('RefreshToken failed:', refreshError);
+        // Refresh failed - tokens cleared and redirect initiated
+        // Create a special error that indicates redirect is happening
+        const error = new Error('Session expired. Redirecting to login...');
         error.response = result;
         error.status = 401;
+        error.isRefreshFailure = true; // Flag to indicate refresh failed
         throw error;
       }
-    }
+    } else {
+      // Other 401 errors (invalid token, no token, etc.)
+      console.log('401 Error - No refresh attempted:', errorMessage);
 
-    // Check if request failed
-    if (!response.ok) {
-      console.log('API Request failed:', {
-        endpoint,
-        status: response.status,
-        message: result.message,
-        hasToken: !!localStorage.getItem('authToken'),
-        isAuthenticated: localStorage.getItem('isAuthenticated')
-      });
+      // If it's "No token provided", clear authentication state
+      if (errorMessage.includes('No token provided')) {
+        console.log('Clearing authentication state due to missing token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('isAuthenticated');
 
-      // Handle 403 Forbidden (license issues) - don't clear auth
-      if (response.status === 403) {
-        console.log('403 Forbidden - License or permission issue, not clearing auth');
+        // Redirect to login if we're in the browser
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 100);
+        }
       }
 
-      // Build detailed error message
-      let errorMessage = result.message || 'Request failed';
-      
-      // If validation errors exist, include them in the message
-      if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
-        const validationErrors = result.errors.map(err => {
-          const field = err.field || 'unknown';
-          const message = err.message || 'Invalid value';
-          return `${field}: ${message}`;
-        }).join('; ');
-        errorMessage = `${errorMessage}. ${validationErrors}`;
-      }
-      
       const error = new Error(errorMessage);
       error.response = result;
-      error.status = response.status;
-      error.validationErrors = result.errors || [];
+      error.status = 401;
       throw error;
     }
+  }
 
-    // Return the result
-    return result;
-  } catch (error) {
-    // If error, throw it
+  // Check if request failed
+  if (!response.ok) {
+    console.log('API Request failed:', {
+      endpoint,
+      status: response.status,
+      message: result.message,
+      hasToken: !!localStorage.getItem('authToken'),
+      isAuthenticated: localStorage.getItem('isAuthenticated')
+    });
+
+    // Handle 403 Forbidden (license issues) - don't clear auth
+    if (response.status === 403) {
+      console.log('403 Forbidden - License or permission issue, not clearing auth');
+    }
+
+    // Build detailed error message
+    let errorMessage = result.message || 'Request failed';
+
+    // If validation errors exist, include them in the message
+    if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
+      const validationErrors = result.errors.map(err => {
+        const field = err.field || 'unknown';
+        const message = err.message || 'Invalid value';
+        return `${field}: ${message}`;
+      }).join('; ');
+      errorMessage = `${errorMessage}. ${validationErrors}`;
+    }
+
+    const error = new Error(errorMessage);
+    error.response = result;
+    error.status = response.status;
+    error.validationErrors = result.errors || [];
     throw error;
   }
+
+  // Return the result
+  return result;
 };
 
 // Helper functions for common HTTP methods
 export const api = {
   // GET request
   get: (endpoint) => apiCall(endpoint, 'GET'),
-  
+
   // POST request
   post: (endpoint, data) => apiCall(endpoint, 'POST', data),
-  
+
   // PUT request
   put: (endpoint, data) => apiCall(endpoint, 'PUT', data),
-  
+
   // PATCH request
   patch: (endpoint, data) => apiCall(endpoint, 'PATCH', data),
-  
+
   // DELETE request
   delete: (endpoint) => apiCall(endpoint, 'DELETE'),
 };

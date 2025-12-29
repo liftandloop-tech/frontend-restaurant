@@ -12,7 +12,6 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const createOrder = async (orderData) => {
-  try {
     // Send create order request to backend
     // Note: Backend validation schema only accepts name, qty, price for items
     const payload = {
@@ -64,9 +63,6 @@ export const createOrder = async (orderData) => {
     const response = await api.post('orders/post/order', payload);
 
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
 
 /**
@@ -75,14 +71,10 @@ export const createOrder = async (orderData) => {
  * @returns {Promise} Response from backend
  */
 export const getOrders = async (filters = {}) => {
-  try {
     const queryParams = new URLSearchParams(filters).toString();
     const endpoint = queryParams ? `orders/get/order?${queryParams}` : 'orders/get/order';
     const response = await api.get(endpoint);
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
 
 /**
@@ -91,12 +83,8 @@ export const getOrders = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const getOrderById = async (orderId) => {
-  try {
     const response = await api.get(`orders/get/order/by/${orderId}`);
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
 
 /**
@@ -106,12 +94,8 @@ export const getOrderById = async (orderId) => {
  * @returns {Promise} Response from backend
  */
 export const updateOrder = async (orderId, updateData) => {
-  try {
     const response = await api.put(`orders/update/order/by/${orderId}`, updateData);
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
 
 /**
@@ -121,12 +105,8 @@ export const updateOrder = async (orderId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const updateOrderStatus = async (orderId, status) => {
-  try {
     const response = await api.patch(`orders/patch/order/by/${orderId}/status`, { status });
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
 
 /**
@@ -136,11 +116,6 @@ export const updateOrderStatus = async (orderId, status) => {
  * @returns {Promise} Response from backend
  */
 export const cancelOrder = async (orderId, reason) => {
-  try {
     const response = await api.post(`orders/post/order/by/${orderId}/cancel`, { reason });
     return response;
-  } catch (error) {
-    throw error;
-  }
 };
-

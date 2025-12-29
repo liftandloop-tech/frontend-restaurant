@@ -12,70 +12,45 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const getCustomers = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `customers/get/customer?${queryParams}` : 'customers/get/customer';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `customers/get/customer?${queryParams}` : 'customers/get/customer';
+  const response = await api.get(endpoint);
+  return response;
 };
 
-/**
- * Get customer by ID
- * @param {string} customerId - Customer ID
- * @returns {Promise} Response from backend
- */
 export const getCustomerById = async (customerId) => {
-  try {
-    const response = await api.get(`customers/get/customer/by/id/${customerId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`customers/get/customer/by/id/${customerId}`);
+  return response;
 };
 
-/**
- * Create a new customer
- * @param {object} customerData - Customer data (name, phone, email, address, etc.)
- * @returns {Promise} Response from backend
- */
 export const createCustomer = async (customerData) => {
-  try {
-    const response = await api.post('customers/create/customer', customerData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('customers/create/customer', customerData);
+  return response;
 };
 
-/**
- * Update customer
- * @param {string} customerId - Customer ID
- * @param {object} updateData - Data to update
- * @returns {Promise} Response from backend
- */
 export const updateCustomer = async (customerId, updateData) => {
-  try {
-    const response = await api.put(`customers/update/customer/by/id/${customerId}`, updateData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`customers/update/customer/by/id/${customerId}`, updateData);
+  return response;
 };
 
-/**
- * Delete customer
- * @param {string} customerId - Customer ID
- * @returns {Promise} Response from backend
- */
 export const deleteCustomer = async (customerId) => {
-  try {
-    const response = await api.delete(`customers/delete/customer/by/id/${customerId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.delete(`customers/delete/customer/by/id/${customerId}`);
+  return response;
 };
 
+export const getFeedbacks = async () => {
+  const response = await api.get('feedback/all');
+  return response;
+};
+
+export const submitFeedback = async (feedbackData) => {
+  const response = await api.post('feedback/submit', feedbackData);
+  return response;
+};
+
+export const activateRevenueCard = async (customerId, cardData) => {
+  const response = await api.post(`customers/activate-card/${customerId}`, cardData);
+  return response;
+};
+
+//end

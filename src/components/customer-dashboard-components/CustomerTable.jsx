@@ -36,6 +36,8 @@ const CustomerTable = ({
   onSelectAll,
   selectedCustomers,
   onCustomerClick,
+  onEditCustomer,
+  onDeleteCustomer,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -230,11 +232,16 @@ const CustomerTable = ({
                     <div className="flex items-center gap-2 mt-1">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${getStatusBadge(
-                          customer.status
+                          customer.isVIP ? 'VIP' : (customer.status || 'Regular')
                         )} transform hover:scale-105 transition-transform`}
                       >
-                        {customer.status}
+                        {customer.isVIP ? 'VIP' : (customer.status || 'Regular')}
                       </span>
+                      {customer.revenueCardEnabled && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full text-[10px] font-bold shadow-sm animate-pulse">
+                          💳 CARD ACTIVE
+                        </span>
+                      )}
                       {customer.loyaltyPoints > 0 && (
                         <span className="inline-block px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-xs font-medium border border-purple-200">
                           ⭐ {customer.loyaltyPoints} pts
@@ -266,12 +273,11 @@ const CustomerTable = ({
                 <div className="hidden lg:block w-24">
                   <div className="bg-gray-50 rounded-lg p-2 text-center">
                     <div className="text-sm font-medium text-gray-900">{customer.lastVisit}</div>
-                    <div className={`text-xs px-2 py-1 rounded-full mt-1 ${
-                      activityIndicator.color === 'bg-green-500' ? 'bg-green-100 text-green-700' :
+                    <div className={`text-xs px-2 py-1 rounded-full mt-1 ${activityIndicator.color === 'bg-green-500' ? 'bg-green-100 text-green-700' :
                       activityIndicator.color === 'bg-yellow-500' ? 'bg-yellow-100 text-yellow-700' :
-                      activityIndicator.color === 'bg-orange-500' ? 'bg-orange-100 text-orange-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
+                        activityIndicator.color === 'bg-orange-500' ? 'bg-orange-100 text-orange-700' :
+                          'bg-red-100 text-red-700'
+                      }`}>
                       {activityIndicator.text}
                     </div>
                   </div>
@@ -303,6 +309,10 @@ const CustomerTable = ({
                 <div className="w-16 md:w-20 flex items-center justify-center">
                   <div className="flex gap-1 md:gap-2 bg-gray-50 rounded-lg p-2">
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCustomerClick && onCustomerClick(customer);
+                      }}
                       className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-all duration-200 transform hover:scale-110"
                       title="View Details"
                     >
@@ -327,6 +337,10 @@ const CustomerTable = ({
                       </svg>
                     </button>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditCustomer && onEditCustomer(customer);
+                      }}
                       className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-100 rounded-md transition-all duration-200 transform hover:scale-110 hidden md:block"
                       title="Edit Customer"
                     >
@@ -345,6 +359,10 @@ const CustomerTable = ({
                       </svg>
                     </button>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCustomer && onDeleteCustomer(customer);
+                      }}
                       className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-all duration-200 transform hover:scale-110 hidden md:block"
                       title="Delete Customer"
                     >
@@ -402,11 +420,10 @@ const CustomerTable = ({
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`px-3 py-1 text-sm rounded ${
-                page === currentPage
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-3 py-1 text-sm rounded ${page === currentPage
+                ? "bg-blue-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {page}
             </button>

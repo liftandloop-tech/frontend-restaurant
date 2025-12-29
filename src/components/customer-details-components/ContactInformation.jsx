@@ -147,8 +147,38 @@ const ContactInformation = ({ customer, onEditProfile, onMerge, onDelete }) => {
             </svg>
           </div>
           <span className="text-gray-700 font-medium">
-            {customer.loyaltyTier} • {customer.loyaltyPoints} Points
+            {customer.loyaltyTier || 'Standard'} • {customer.loyaltyPoints || 0} Points
           </span>
+        </div>
+
+        {/* Revenue Card Details */}
+        <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
+          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+            <svg
+              className="w-4 h-4 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">Revenue Card</span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${customer.revenueCardEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                {customer.revenueCardEnabled ? 'ACTIVE' : 'INACTIVE'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-sm font-semibold text-gray-900">
+                {customer.revenueCardEnabled ? `**** **** ${customer.revenueCardNumber?.slice(-4)}` : 'Not Linked'}
+              </span>
+              {customer.revenueCardEnabled && (
+                <span className="text-sm font-bold text-blue-600">₹{customer.revenueCardBalance || 0}</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

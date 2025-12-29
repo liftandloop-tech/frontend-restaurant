@@ -34,7 +34,7 @@ const AddMenu = ({ isOpen, onClose, onSubmit, categories = [] }) => {
     if (categories.length > 0 && !formData.category) {
       setFormData(prev => ({ ...prev, category: categories[0]._id }));
     }
-  }, [categories]);
+  }, [categories, formData.category]);
 
   // Handle input changes
   const handleChange = (e) => {

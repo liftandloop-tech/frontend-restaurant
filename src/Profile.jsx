@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertBanner,
@@ -25,7 +25,7 @@ const Profile = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   // Load data from localStorage or use defaults
-  const loadDataFromStorage = () => {
+  const loadDataFromStorage = useCallback(() => {
     const storedOwner = localStorage.getItem("profileOwnerData");
     const storedBusiness = localStorage.getItem("profileBusinessData");
     const storedLicense = localStorage.getItem("profileLicenseData");
@@ -47,7 +47,7 @@ const Profile = () => {
         ? JSON.parse(storedActivities)
         : getDefaultActivities(),
     };
-  };
+  }, []);
 
   const getDefaultOwnerData = () => ({
     name: "Ishan Bhagat",
@@ -140,7 +140,7 @@ const Profile = () => {
   useEffect(() => {
     const data = loadDataFromStorage();
     setProfileData(data);
-  }, []);
+  }, [loadDataFromStorage]);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
@@ -188,7 +188,7 @@ const Profile = () => {
     showNotification("Profile information updated successfully!", "success");
   };
 
-  const handleSavePassword = (passwordData) => {
+  const handleSavePassword = (/* passwordData */) => {
     // Update password last updated date
     const today = new Date();
     const formattedDate = today.toLocaleDateString("en-GB", {
@@ -330,13 +330,12 @@ const Profile = () => {
   const showNotification = (message, type = "success") => {
     // Create a simple notification
     const notification = document.createElement("div");
-    notification.className = `fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-      type === "success"
-        ? "bg-green-500 text-white"
-        : type === "error"
+    notification.className = `fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${type === "success"
+      ? "bg-green-500 text-white"
+      : type === "error"
         ? "bg-red-500 text-white"
         : "bg-blue-500 text-white"
-    }`;
+      }`;
     notification.textContent = message;
     document.body.appendChild(notification);
 

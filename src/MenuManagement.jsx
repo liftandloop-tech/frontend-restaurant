@@ -6,13 +6,26 @@ import MenuItemsList from "./components/menu-management-components/MenuItemsList
 import Pagination from "./components/menu-management-components/Pagination";
 import AddMenu from "./AddMenu";
 import AddCategory from "./AddCategory";
-import { getCategories, createCategory, getMenuItems, createMenuItem, updateCategory, deleteCategory } from "./utils/menu";
+import {
+  useGetCategoriesQuery,
+  useGetMenuItemsQuery,
+  useCreateCategoryMutation,
+  useCreateMenuItemMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation
+} from "./features/menu/menuApiSlice";
 
 const MenuManagement = () => {
-  const [categories, setCategories] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: categoriesResponse } = useGetCategoriesQuery();
+  const { data: menuItemsResponse, isLoading: isMenuItemsLoading } = useGetMenuItemsQuery();
+
+  const categories = categoriesResponse?.success ? categoriesResponse.data : [];
+  const menuItems = menuItemsResponse?.success ? menuItemsResponse.data : [];
+  const [createCategory] = useCreateCategoryMutation();
+  const [createMenuItem] = useCreateMenuItemMutation();
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
+
   const [activeCategory, setActiveCategory] = useState(null);
 
   // Pagination states
@@ -31,36 +44,12 @@ const MenuManagement = () => {
   // Add Category modal state
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 
-  // Fetch initial data
+  // Set active category when data loads
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [categoriesRes, itemsRes] = await Promise.all([
-        getCategories(),
-        getMenuItems()
-      ]);
-
-      if (categoriesRes.success) {
-        setCategories(categoriesRes.data);
-        if (categoriesRes.data.length > 0 && !activeCategory) {
-          setActiveCategory(categoriesRes.data[0]);
-        }
-      }
-
-      if (itemsRes.success) {
-        setMenuItems(itemsRes.data);
-      }
-    } catch (err) {
-      console.error("Error fetching menu data:", err);
-      setError("Failed to load menu. Please try again.");
-    } finally {
-      setLoading(false);
+    if (categories.length > 0 && !activeCategory) {
+      setActiveCategory(categories[0]);
     }
-  };
+  }, [categories, activeCategory]);
 
   const handleCategorySelect = (category) => {
     setActiveCategory(category);
@@ -68,13 +57,7 @@ const MenuManagement = () => {
 
   const handleToggleCategoryStatus = async (id, currentStatus) => {
     try {
-      const response = await updateCategory(id, { isActive: !currentStatus });
-      if (response.success) {
-        // Update local state without full refetch
-        setCategories(prev => prev.map(c =>
-          c._id === id ? { ...c, isActive: !currentStatus } : c
-        ));
-      }
+      await updateCategory({ categoryId: id, isActive: !currentStatus }).unwrap();
     } catch (err) {
       console.error("Error toggling category status:", err);
       alert("Failed to update category status");
@@ -84,12 +67,12 @@ const MenuManagement = () => {
   const handleDeleteCategory = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
-        const response = await deleteCategory(id);
-        if (response.success) {
-          setCategories(prev => prev.filter(c => c._id !== id));
-          if (activeCategory && activeCategory._id === id) {
-            setActiveCategory(categories.find(c => c._id !== id) || null);
-          }
+        await deleteCategory(id).unwrap();
+        if (activeCategory && activeCategory._id === id) {
+          // Let the effect handle setting a new active category if needed, 
+          // but we might want to manually switch to avoid flicker or null state if possible.
+          // simpler to just null it and let effect pick first one
+          setActiveCategory(null);
         }
       } catch (err) {
         console.error("Error deleting category:", err);
@@ -102,16 +85,14 @@ const MenuManagement = () => {
     // For now, prompt for rename as a simple edit implementation
     const newName = prompt("Enter new category name:", category.name);
     if (newName && newName !== category.name) {
-      updateCategory(category._id, { name: newName })
-        .then(res => {
-          if (res.success) {
-            setCategories(prev => prev.map(c => c._id === category._id ? { ...c, name: newName } : c));
-            if (activeCategory && activeCategory._id === category._id) {
-              setActiveCategory({ ...activeCategory, name: newName });
-            }
+      updateCategory({ categoryId: category._id, name: newName })
+        .unwrap()
+        .then(() => {
+          if (activeCategory && activeCategory._id === category._id) {
+            setActiveCategory({ ...activeCategory, name: newName });
           }
         })
-        .catch(err => alert("Failed to update category"));
+        .catch(() => alert("Failed to update category"));
     }
   };
 
@@ -141,11 +122,8 @@ const MenuManagement = () => {
         image: "https://images.unsplash.com/photo-1551218808-94e220e084d2"
       };
 
-      const response = await createMenuItem(payload);
-      if (response.success) {
-        await fetchData(); // Refresh data
-        setIsAddMenuOpen(false);
-      }
+      await createMenuItem(payload).unwrap();
+      setIsAddMenuOpen(false);
     } catch (err) {
       console.error("Error creating menu item:", err);
       alert("Failed to create menu item");
@@ -155,17 +133,14 @@ const MenuManagement = () => {
   // Handle submission from AddCategory component
   const handleCategorySubmit = async (payload) => {
     try {
-      const response = await createCategory({
+      await createCategory({
         name: payload.name,
         displayName: payload.displayName,
         description: payload.shortDescription,
         displayOrder: payload.displayOrder
-      });
+      }).unwrap();
 
-      if (response.success) {
-        await fetchData();
-        setIsAddCategoryOpen(false);
-      }
+      setIsAddCategoryOpen(false);
     } catch (err) {
       console.error("Error creating category:", err);
       alert("Failed to create category");
@@ -206,7 +181,7 @@ const MenuManagement = () => {
     currentPage * itemsPerPage
   );
 
-  if (loading) return <div className="flex justify-center pt-20">Loading menu...</div>;
+  if (isMenuItemsLoading && menuItems.length === 0) return <div className="flex justify-center pt-20">Loading menu...</div>;
 
   return (
     <div className="p-8">
@@ -240,12 +215,7 @@ const MenuManagement = () => {
               onDelete={handleDeleteCategory}
               onEdit={handleEditCategory}
             />
-            <button
-              className="bg-gray-100  hover:bg-gray-200 text-gray-800 px-4 py-2 text-[15px] rounded-md cursor-pointer mt-5 w-full font-medium flex items-center justify-center gap-1 border border-gray-200"
-              onClick={handleAddCategory}
-            >
-              + Add New Category
-            </button>
+
           </div>
 
           {/* Menu Items Section */}

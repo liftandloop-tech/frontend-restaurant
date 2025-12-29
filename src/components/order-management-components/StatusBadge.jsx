@@ -1,6 +1,6 @@
 import React from "react";
 
-const StatusBadge = ({ status, paymentStatus, source }) => {
+const StatusBadge = ({ status, source }) => {
   const getStatusConfig = (status) => {
     switch (status) {
       case "new":

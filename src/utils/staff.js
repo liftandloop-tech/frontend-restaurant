@@ -57,7 +57,7 @@ export const registerStaff = async (staffData) => {
 export const getAllStaff = async (params = {}) => {
     // Filter out undefined, null, or "All Roles" values
     const filteredParams = Object.fromEntries(
-        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "" && v !== "All Roles")
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "All Roles")
     );
     const queryString = new URLSearchParams(filteredParams).toString();
     const endpoint = queryString ? `staff?${queryString}` : 'staff';
@@ -115,18 +115,6 @@ export const formatStaffList = (staffArray) => {
 };
 
 // Get role display name
-// export const getRoleDisplayName = (role) => {
-//     const roleNames = {
-//         'Admin': 'Administrator',
-//         'Manager': 'Manager',
-//         'Cashier': 'Cashier',
-//         'Waiter': 'Waiter',
-//         'Kitchen': 'Kitchen Staff'
-//     };
-//     return roleNames[role] || role;
-// };
-
-//get role display name
 export const getRoleDisplayName = (role) => {
     const roleNames = {
         'Admin': 'Administration',
@@ -140,20 +128,6 @@ export const getRoleDisplayName = (role) => {
     return roleNames[role] || role;
 }
 
-// // Get status display info
-// export const getStatusDisplayInfo = (isActive) => {
-//     return isActive ? {
-//         text: 'Active',
-//         color: 'green',
-//         bgColor: 'bg-green-100',
-//         textColor: 'text-green-800'
-//     } : {
-//         text: 'Inactive',
-//         color: 'red',
-//         bgColor: 'bg-red-100',
-//         textColor: 'text-red-800'
-//     };
-// };
 export const getStatusDisplayInfo = (isActive) => {
     return isActive ? {
         text: 'Active',
@@ -170,45 +144,6 @@ export const getStatusDisplayInfo = (isActive) => {
     }
 }
 
-// Validate staff form data
-// export const validateStaffForm = (formData) => {
-//     const errors = [];
-
-//     if (!formData.fullName || formData.fullName.trim().length < 2) {
-//         errors.push('Full name is required and must be at least 2 characters');
-//     }
-
-//     if (!formData.phoneNumber) {
-//         errors.push('Phone number is required');
-//     } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
-//         errors.push('Please enter a valid phone number');
-//     }
-
-//     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-//         errors.push('Please enter a valid email address');
-//     }
-
-//     if (!formData.role) {
-//         errors.push('Role is required');
-//     }
-
-//     if (!formData.username || formData.username.trim().length < 3) {
-//         errors.push('Username is required and must be at least 3 characters');
-//     }
-
-//     if (!formData.password || formData.password.length < 6) {
-//         errors.push('Password is required and must be at least 6 characters');
-//     }
-
-//     if (formData.shiftStart && formData.shiftEnd && formData.shiftStart >= formData.shiftEnd) {
-//         errors.push('Shift end time must be after shift start time');
-//     }
-
-//     return {
-//         isValid: errors.length === 0,
-//         errors
-//     };
-// };
 //validate staff from data
 export const validateStaffFormData = (formData) => {
     const errors = [];
@@ -217,7 +152,7 @@ export const validateStaffFormData = (formData) => {
     }
     if (!formData.phoneNumber) {
         errors.push('phone number is required');
-    } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
+    } else if (!/^[+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
         errors.push('Please enter a valid phone number');
     }
 

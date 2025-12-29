@@ -18,9 +18,6 @@ const NewVsReturningChart = () => {
     { week: "Week 4", newCustomers: 61, returningCustomers: 158 },
   ];
 
-  const maxValue = Math.max(
-    ...chartData.flatMap((d) => [d.newCustomers, d.returningCustomers])
-  );
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

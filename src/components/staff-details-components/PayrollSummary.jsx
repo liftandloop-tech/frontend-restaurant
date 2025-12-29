@@ -4,7 +4,7 @@ import React from 'react';
  * Payroll Summary Component
  * Displays salary breakdown, earnings, and payment actions
  */
-const PayrollSummary = ({ 
+const PayrollSummary = ({
   payrollData = {
     baseSalary: 3200,
     bonuses: 150,
@@ -16,7 +16,7 @@ const PayrollSummary = ({
   onViewPayrollHistory,
   onProcessPayment
 }) => {
-  const totalEarnings = payrollData.baseSalary + payrollData.bonuses + payrollData.tips - payrollData.deductions;
+  // const totalEarnings = payrollData.baseSalary + payrollData.bonuses + payrollData.tips - payrollData.deductions;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -34,7 +34,7 @@ const PayrollSummary = ({
         {/* Payroll Items */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Payroll Items</h3>
-          
+
           <div className="space-y-3">
             {/* Base Salary */}
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -65,17 +65,17 @@ const PayrollSummary = ({
         {/* Current Month Earnings */}
         <div className="bg-gray-50 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Current Month Earnings</h3>
-          
+
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
               ${payrollData.currentMonthEarnings.toLocaleString()}
             </div>
-            
+
             <div className="flex items-center justify-center mb-3">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               <span className="text-sm font-medium text-green-600">{payrollData.paymentStatus}</span>
             </div>
-            
+
             <div className="flex items-center justify-center text-xs text-gray-500">
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -97,7 +97,7 @@ const PayrollSummary = ({
           </svg>
           View Payroll History
         </button>
-        
+
         <button
           onClick={onProcessPayment}
           className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"

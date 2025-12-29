@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   CustomerManagement,
   CustomerSegments,
 } from "./components/customer-dashboard-components";
 import AddCustomer from "./AddCustomer";
-import { getCustomers, createCustomer } from "./utils/customers";
+import {
+  useGetCustomersQuery,
+  useGetFeedbacksQuery,
+  useCreateCustomerMutation,
+  useDeleteCustomerMutation
+} from "./features/customers/customersApiSlice";
 
 /**
  * CustomerReport - Customer Management Page
@@ -23,129 +28,117 @@ const CustomerReport = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Customer data
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // RTK Query hooks
+  const { data: customersResponse, isLoading: customersLoading } = useGetCustomersQuery({ isActive: true });
+  const { data: feedbackResponse } = useGetFeedbacksQuery();
+  const [createCustomerApi] = useCreateCustomerMutation();
+  const [deleteCustomerApi] = useDeleteCustomerMutation();
 
-  // Sample feedback data
-  const feedbackData = {
-    distribution: {
-      positive: 78,
-      neutral: 15,
-      negative: 7,
-    },
-    recentFeedback: [
-      {
-        customerName: "Sarah Johnson",
-        rating: 5,
-        comment: "Amazing food and service! Will definitely come back.",
-        date: "2 days ago",
-      },
-      {
-        customerName: "Michael Chen",
-        rating: 2,
-        comment: "Food was okay, but service was slow.",
-        date: "1 week ago",
-      },
-      {
-        customerName: "Emily Rodriguez",
-        rating: 5,
-        comment:
-          "Perfect dining experience. The staff was incredibly attentive.",
-        date: "3 days ago",
-      },
-    ],
-  };
+  // Transform customers data
+  const customers = useMemo(() => {
+    if (!customersResponse?.success || !customersResponse?.data) return [];
 
-  // Sample customer segments data
-  const segments = [
-    {
-      type: "highSpenders",
-      count: 24,
-      title: "High Spenders",
-      description: "Top 10% by spend",
-      metric: "Avg Spend: ₹127",
-    },
-    {
-      type: "frequentVisitors",
-      count: 67,
-      title: "Frequent Visitors",
-      description: "5+ visits in 30 days",
-      metric: "Avg Visits: 8.2",
-    },
-    {
-      type: "inactive",
-      count: 43,
-      title: "Inactive 90 Days",
-      description: "No visits recently",
-      metric: "Last Visit: 3+ months",
-    },
-    {
-      type: "newCustomers",
-      count: 18,
-      title: "New Customers",
-      description: "First visit in 30 days",
-      metric: "Avg Spend: ₹32",
-    },
-  ];
+    return customersResponse.data.map((customer) => {
+      const lastVisit = customer.lastVisit
+        ? new Date(customer.lastVisit).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+        : "Never";
 
-  // Fetch customers
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true);
-        const response = await getCustomers({ isActive: true });
-        if (response.success && response.data) {
-          const transformedCustomers = response.data.map((customer) => {
-            let status = "Walk-in";
-            if (customer.loyaltyPoints >= 1000) {
-              status = "VIP";
-            } else if (customer.totalOrders > 5) {
-              status = "Regular";
-            }
+      const avgSpend = customer.totalOrders > 0
+        ? `₹${Math.round(customer.totalSpent / customer.totalOrders)}`
+        : "₹0";
 
-            const lastVisit = customer.lastVisit
-              ? new Date(customer.lastVisit).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })
-              : "Never";
+      const rating = customer.loyaltyPoints > 0
+        ? Math.min(5, Math.max(1, (customer.loyaltyPoints / 200) + 3))
+        : 0;
 
-            const avgSpend = customer.totalOrders > 0
-              ? `₹${Math.round(customer.totalSpent / customer.totalOrders)}`
-              : "₹0";
+      return {
+        id: customer._id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email || "",
+        visits: customer.totalOrders || 0,
+        lastVisit: lastVisit,
+        avgSpend: avgSpend,
+        rating: rating,
+        status: customer.isVIP ? 'VIP' : (customer.totalOrders > 5 ? 'Regular' : 'Walk-in'),
+        isVIP: customer.isVIP,
+        revenueCardEnabled: customer.revenueCardEnabled,
+        revenueCardNumber: customer.revenueCardNumber,
+        revenueCardBalance: customer.revenueCardBalance,
+        totalSpent: customer.totalSpent || 0,
+        loyaltyPoints: customer.loyaltyPoints || 0,
+        isActive: customer.isActive,
+        createdAt: customer.createdAt
+      };
+    });
+  }, [customersResponse]);
 
-            const rating = customer.loyaltyPoints > 0
-              ? Math.min(5, Math.max(1, (customer.loyaltyPoints / 200) + 3))
-              : 0;
-
-            return {
-              id: customer._id,
-              name: customer.name,
-              phone: customer.phone,
-              email: customer.email || "",
-              visits: customer.totalOrders || 0,
-              lastVisit: lastVisit,
-              avgSpend: avgSpend,
-              rating: rating,
-              status: status,
-              totalSpent: customer.totalSpent || 0,
-              loyaltyPoints: customer.loyaltyPoints || 0,
-              isActive: customer.isActive,
-              createdAt: customer.createdAt
-            };
-          });
-          setCustomers(transformedCustomers);
-        }
-      } catch (err) {
-        console.error("Error fetching customers:", err);
-      } finally {
-        setLoading(false);
-      }
+  // Transform feedback for the overview component
+  const transformedFeedback = useMemo(() => {
+    const feedbackData = feedbackResponse?.success ? feedbackResponse.data : [];
+    const feedbackResult = {
+      distribution: { positive: 0, neutral: 0, negative: 0 },
+      recentFeedback: []
     };
-    fetchCustomers();
-  }, []);
+
+    if (!feedbackData || feedbackData.length === 0) return feedbackResult;
+
+    const total = feedbackData.length;
+    const pos = feedbackData.filter(f => f.rating >= 4).length;
+    const neu = feedbackData.filter(f => f.rating === 3).length;
+    const neg = feedbackData.filter(f => f.rating <= 2).length;
+
+    return {
+      distribution: {
+        positive: total > 0 ? Math.round((pos / total) * 100) : 0,
+        neutral: total > 0 ? Math.round((neu / total) * 100) : 0,
+        negative: total > 0 ? Math.round((neg / total) * 100) : 0,
+      },
+      recentFeedback: feedbackData.slice(0, 10).map(f => ({
+        customerName: f.customerName,
+        rating: f.rating,
+        comment: f.comment,
+        date: new Date(f.createdAt).toLocaleDateString()
+      }))
+    };
+  }, [feedbackResponse]);
+
+  // Derived segments from real data
+  const segments = useMemo(() => {
+    if (!customers || customers.length === 0) return [];
+
+    return [
+      {
+        type: "vip",
+        count: customers.filter(c => c.isVIP).length,
+        title: "VIP Customers",
+        description: "Premium members",
+        metric: `Avg Spend: ₹${Math.round(customers.filter(c => c.isVIP).reduce((acc, c) => acc + (c.totalSpent || 0), 0) / Math.max(1, customers.filter(c => c.isVIP).length))}`,
+      },
+      {
+        type: "highSpenders",
+        count: customers.filter(c => (c.totalSpent || 0) > 5000).length,
+        title: "High Spenders",
+        description: "Spend > ₹5000",
+        metric: "Top Tier",
+      },
+      {
+        type: "newCustomers",
+        count: customers.filter(c => {
+          const createdAt = new Date(c.createdAt);
+          const now = new Date();
+          return (now - createdAt) / (1000 * 60 * 60 * 24) <= 30;
+        }).length,
+        title: "New Customers",
+        description: "Joined last 30 days",
+        metric: "Growing",
+      }
+    ];
+  }, [customers]);
 
   // Handler to open Add Customer modal
   const handleAddCustomer = () => {
@@ -167,56 +160,10 @@ const CustomerReport = () => {
       setError("");
       setSuccess("");
 
-      const response = await createCustomer(customerData);
+      const response = await createCustomerApi(customerData).unwrap();
 
       if (response.success) {
         setSuccess("Customer added successfully!");
-        // Refresh customer list
-        const updatedResponse = await getCustomers({ isActive: true });
-        if (updatedResponse.success && updatedResponse.data) {
-          const transformedCustomers = updatedResponse.data.map((customer) => {
-            let status = "Walk-in";
-            if (customer.loyaltyPoints >= 1000) {
-              status = "VIP";
-            } else if (customer.totalOrders > 5) {
-              status = "Regular";
-            }
-
-            const lastVisit = customer.lastVisit
-              ? new Date(customer.lastVisit).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })
-              : "Never";
-
-            const avgSpend = customer.totalOrders > 0
-              ? `₹${Math.round(customer.totalSpent / customer.totalOrders)}`
-              : "₹0";
-
-            const rating = customer.loyaltyPoints > 0
-              ? Math.min(5, Math.max(1, (customer.loyaltyPoints / 200) + 3))
-              : 0;
-
-            return {
-              id: customer._id,
-              name: customer.name,
-              phone: customer.phone,
-              email: customer.email || "",
-              visits: customer.totalOrders || 0,
-              lastVisit: lastVisit,
-              avgSpend: avgSpend,
-              rating: rating,
-              status: status,
-              totalSpent: customer.totalSpent || 0,
-              loyaltyPoints: customer.loyaltyPoints || 0,
-              isActive: customer.isActive,
-              createdAt: customer.createdAt
-            };
-          });
-          setCustomers(transformedCustomers);
-        }
-
         // Close modal after 1.5 seconds
         setTimeout(() => {
           setIsAddCustomerModalOpen(false);
@@ -225,9 +172,33 @@ const CustomerReport = () => {
       }
     } catch (error) {
       console.error("Error adding customer:", error);
-      setError(error.message || "Failed to add customer. Please try again.");
+      setError(error.data?.message || error.message || "Failed to add customer. Please try again.");
     }
   };
+
+  // Handle edit customer
+  const handleEditCustomer = (customer) => {
+    // Logic to open edit modal or navigate to edit page
+    console.log("Edit customer:", customer);
+  };
+
+  // Handle delete customer
+  const handleDeleteCustomer = async (customer) => {
+    if (window.confirm(`Are you sure you want to delete ${customer.name}?`)) {
+      try {
+        const response = await deleteCustomerApi(customer.id).unwrap();
+        if (response.success) {
+          setSuccess("Customer deleted successfully");
+          setTimeout(() => setSuccess(""), 3000);
+        }
+      } catch (err) {
+        console.error("Error deleting customer:", err);
+        setError("Failed to delete customer");
+        setTimeout(() => setError(""), 3000);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Container */}
@@ -235,9 +206,11 @@ const CustomerReport = () => {
         {/* Customer Management Section */}
         <CustomerManagement
           customers={customers}
-          feedbackData={feedbackData}
+          feedbackData={transformedFeedback}
           onAddCustomer={handleAddCustomer}
-          loading={loading}
+          onEditCustomer={handleEditCustomer}
+          onDeleteCustomer={handleDeleteCustomer}
+          loading={customersLoading}
         />
 
         {/* Customer Segments Section */}

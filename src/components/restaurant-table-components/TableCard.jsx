@@ -63,7 +63,8 @@ const TableCard = ({
   location,
   onTransferTable,
   onCompleteCleaning,
-  onSetTableTransfer,
+  // onSetTableTransfer, // Removed unused prop
+  onUpdateStatus,
   onTableClick,
   showServingInfo
 }) => {
@@ -81,9 +82,9 @@ const TableCard = ({
 
   return (
     <div
-      className={`w-[230px] rounded-lg border-2 ${styles.container} p-3 relative ${isAvailable || status === "serving"
-        ? `cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 ${status === "serving"
-          ? `ring-2 ring-blue-300 hover:ring-blue-400 ${location === 'outdoor' ? 'bg-blue-50/50' : ''
+      className={`w-[230px] rounded-lg border-2 ${styles.container} p-3 relative ${isAvailable || status === "serving" || status === "reserved"
+        ? `cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 ${status === "serving" || status === "reserved"
+          ? `ring-2 ${status === 'serving' ? 'ring-blue-300 hover:ring-blue-400' : 'ring-amber-300 hover:ring-amber-400'} ${location === 'outdoor' ? 'bg-blue-50/50' : ''
           }`
           : ""
         }`
@@ -134,9 +135,6 @@ const TableCard = ({
               <span className="capitalize">{status}</span>
               <BsInfoCircle className="w-3 h-3 opacity-70" title={`Click for ${status} summary`} />
             </div>
-            <div className="text-xs opacity-80">
-              Order: {currentOrder.status || 'Unknown'}
-            </div>
             {currentOrder.waiterId && (
               <div className="text-xs opacity-80">
                 Waiter: {currentOrder.waiterId.fullName || currentOrder.waiterId.name || 'Unknown'}
@@ -150,31 +148,45 @@ const TableCard = ({
           status.charAt(0).toUpperCase() + status.slice(1)
         )}
       </div>
-      {/* Render buttons based on state
-        - Available: Reserve (outline) - No Take Order button
-        - Serving: Transfer (outline, full width) - No Change Order button
-        - Reserved: Check In (filled), Cancel (outline)
-      */}
-      <div className="mt-3 flex items-center gap-2">
+      {/* Render buttons based on state */}
+      <div className="mt-3 flex flex-col gap-2">
         {status === "available" && (
           <button
-            className={`h-8 px-3 rounded text-[13px] border ${styles.outlineBtn}`}
+            className={`h-8 px-3 rounded text-[13px] border ${styles.outlineBtn} w-full`}
+            onClick={(e) => { e.stopPropagation(); onUpdateStatus && onUpdateStatus(id, 'reserved'); }}
           >
             Reserve
           </button>
         )}
         {status === "serving" && (
-          <button
-            onClick={() => onSetTableTransfer && onSetTableTransfer(id)}
-            className={`h-8 px-3 rounded text-[13px] ${styles.outlineBtn} w-full`}
-          >
-            Transfer
-          </button>
+          <>
+            {/* <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTableClick && onTableClick(tableNumber, currentOrder, location);
+              }}
+              className={`h-8 px-3 rounded text-[13px] ${styles.outlineBtn} w-full font-semibold border-2`}
+            >
+              🥣 Serving Order info
+            </button>*/}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus && onUpdateStatus(id, 'reserved');
+              }}
+              className={`h-8 px-3 rounded text-[13px] ${styles.filledBtn} w-full`}
+            >
+              ✓ Mark as Served
+            </button>
+          </>
         )}
         {status === "reserved" && (
           <>
             <button
-              onClick={() => onTransferTable && onTransferTable(tableNumber)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus && onUpdateStatus(id, 'available');
+              }}
               className={`h-8 px-3 rounded text-[13px] ${styles.filledBtn} w-full`}
               title="Return table to available status"
             >
@@ -214,6 +226,7 @@ TableCard.propTypes = {
   onTransferTable: PropTypes.func,
   onCompleteCleaning: PropTypes.func,
   onSetTableTransfer: PropTypes.func,
+  onUpdateStatus: PropTypes.func,
   onTableClick: PropTypes.func,
   showServingInfo: PropTypes.bool
 };

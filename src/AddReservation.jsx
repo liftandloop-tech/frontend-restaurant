@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FormSection,
@@ -7,8 +7,8 @@ import {
   AdditionalInfo,
   Summary,
 } from "./components/add-reservation-components";
-import { createReservation } from "./utils/reservations";
-import { getTables } from "./utils/tables";
+import { useCreateReservationMutation } from "./features/reservations/reservationsApiSlice";
+import { useGetTablesQuery } from "./features/tables/tablesApiSlice";
 
 /**
  * AddReservation page
@@ -30,32 +30,20 @@ const AddReservation = () => {
     notes: "",
     deposit: "",
   });
-  const [availableTables, setAvailableTables] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Fetch available tables on component mount
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        const response = await getTables({ status: "available" });
-        if (response.success && response.data) {
-          // Format tables for dropdown: extract table number from tableNumber field
-          const tables = response.data.map(table => ({
-            label: `Table ${table.tableNumber}`,
-            value: table.tableNumber.toString()
-          }));
-          setAvailableTables(tables);
-        }
-      } catch (error) {
-        console.error("Error fetching tables:", error);
-        // Don't show error, just use default options
-      }
-    };
+  // RTK Query Hooks
+  const { data: tablesResponse } = useGetTablesQuery({ status: "available" }, { skip: !localStorage.getItem('authToken') });
+  const [createReservation] = useCreateReservationMutation();
 
-    fetchTables();
-  }, []);
+  // Derived available tables
+  const availableTables = tablesResponse?.data?.map(table => ({
+    label: `Table ${table.tableNumber} (Cap: ${table.capacity})`,
+    value: table.tableNumber.toString()
+  })) || [];
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -76,7 +64,7 @@ const AddReservation = () => {
     // Extract table number from "Table X" format or use direct number
     let tableNumber = form.table;
     if (tableNumber.includes("Table ")) {
-      tableNumber = tableNumber.replace("Table ", "");
+      tableNumber = tableNumber.replace("Table ", "").split(" ")[0]; // Handle "Table 12 (Cap: 4)"
     }
 
     try {
@@ -91,7 +79,7 @@ const AddReservation = () => {
         notes: form.notes.trim() || undefined
       };
 
-      const response = await createReservation(reservationData);
+      const response = await createReservation(reservationData).unwrap();
 
       if (response.success) {
         setSuccess("Reservation created successfully!");
@@ -99,36 +87,24 @@ const AddReservation = () => {
         setTimeout(() => {
           navigate("/reservations");
         }, 1500);
-      } else {
-        throw new Error(response.message || "Failed to create reservation");
       }
     } catch (error) {
       console.error("Error creating reservation:", error);
-      
+
       // Handle authentication errors
-      if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          return;
-        }
+      if (error.status === 401) {
         setError("Your session has expired. Please login again.");
         setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
           navigate('/login');
         }, 2000);
-      } else if (error.status === 400 && error.validationErrors && error.validationErrors.length > 0) {
+      } else if (error.status === 400 && error.data?.validationErrors && error.data.validationErrors.length > 0) {
         // Handle validation errors
-        const validationMessages = error.validationErrors.map(err => {
-          const field = err.field || 'unknown';
-          const message = err.message || 'Invalid value';
-          const formattedField = field.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          return `${formattedField}: ${message}`;
+        const validationMessages = error.data.validationErrors.map(err => {
+          return `${err.field}: ${err.message}`;
         });
         setError(`Validation failed:\n${validationMessages.join('\n')}`);
       } else {
-        setError(error.message || "Failed to create reservation. Please try again.");
+        setError(error.data?.message || "Failed to create reservation. Please try again.");
       }
     } finally {
       setLoading(false);

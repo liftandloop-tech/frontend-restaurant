@@ -12,9 +12,8 @@ const ReservationTable = ({ reservations }) => {
 
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          badgeClasses[status] || "bg-gray-100"
-        }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${badgeClasses[status] || "bg-gray-100"
+          }`}
       >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -22,7 +21,7 @@ const ReservationTable = ({ reservations }) => {
   };
 
   // Function to render action buttons based on reservation status
-  const renderActions = (reservation) => {
+  const renderActions = () => {
     return (
       <div className="flex space-x-2">
         <button className="p-1 text-blue-600 hover:text-blue-800">
@@ -99,7 +98,7 @@ const ReservationTable = ({ reservations }) => {
               <td className="px-6 py-4">
                 {renderStatusBadge(reservation.status)}
               </td>
-              <td className="px-6 py-4">{renderActions(reservation)}</td>
+              <td className="px-6 py-4">{renderActions()}</td>
             </tr>
           ))}
         </tbody>

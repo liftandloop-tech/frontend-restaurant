@@ -9,7 +9,7 @@ import React from "react";
  * - Date, time, and amount
  * - "See All Visits" link
  */
-const VisitHistory = ({ visits, onSeeAllVisits }) => {
+const VisitHistory = ({ visits = [], onSeeAllVisits }) => {
   // Get icon and styling for visit type
   const getVisitTypeInfo = (type) => {
     const types = {
@@ -89,7 +89,7 @@ const VisitHistory = ({ visits, onSeeAllVisits }) => {
 
       {/* Visit List */}
       <div className="space-y-3">
-        {visits.map((visit, index) => {
+        {Array.isArray(visits) && visits.map((visit, index) => {
           const typeInfo = getVisitTypeInfo(visit.type);
 
           return (

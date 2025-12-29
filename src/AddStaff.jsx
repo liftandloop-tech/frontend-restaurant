@@ -141,7 +141,7 @@ const AddStaff = ({ isOpen, onClose, onSubmit, initialData }) => {
     }
 
     // Validate phone number format (basic validation)
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phoneRegex = /^[+]?[1-9]\d{0,15}$/;
     if (!phoneRegex.test(formData.phoneNumber.replace(/\D/g, ""))) {
       alert("Please enter a valid phone number");
       return;

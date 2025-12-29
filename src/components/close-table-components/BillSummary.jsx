@@ -20,8 +20,8 @@ const BillSummary = ({ subtotal, tax, serviceCharge, discount, tip, total }) => 
       <h2 className="text-base font-semibold text-gray-800 mb-3">Bill Summary</h2>
       <div className="space-y-2">
         <Row label="Subtotal" value={subtotal} />
-        <Row label="CGST (9%)" value={tax / 2} />
-        <Row label="SGST (9%)" value={tax / 2} />
+        <Row label="CGST" value={tax / 2} />
+        <Row label="SGST" value={tax / 2} />
         <Row label="Service Charge" value={serviceCharge} />
         {discount > 0 && <Row label="Discount" value={-discount} />}
         {tip > 0 && <Row label="Tip" value={tip} />}

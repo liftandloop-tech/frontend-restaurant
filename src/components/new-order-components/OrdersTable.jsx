@@ -6,6 +6,9 @@ const OrdersTable = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("draft");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [staffSearch, setStaffSearch] = useState("");
+  const [sourceSearch, setSourceSearch] = useState("all");
 
   // Fetch orders on component mount
   useEffect(() => {
@@ -55,8 +58,27 @@ const OrdersTable = () => {
     // Sort by creation date (newest first)
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    // Apply Customer and Staff filters
+    if (customerSearch) {
+      filtered = filtered.filter(order =>
+        (order.customerName || order.customerId?.name || "").toLowerCase().includes(customerSearch.toLowerCase())
+      );
+    }
+
+    if (staffSearch) {
+      filtered = filtered.filter(order =>
+        (order.waiterId?.fullName || order.waiterId?.name || "").toLowerCase().includes(staffSearch.toLowerCase())
+      );
+    }
+
+    if (sourceSearch !== "all") {
+      filtered = filtered.filter(order =>
+        (order.source || "dine-in").toLowerCase() === sourceSearch.toLowerCase()
+      );
+    }
+
     setFilteredOrders(filtered);
-  }, [orders, activeTab]);
+  }, [orders, activeTab, customerSearch, staffSearch, sourceSearch]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -103,25 +125,69 @@ const OrdersTable = () => {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.key
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+              ? "bg-blue-600 text-white"
+              : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
               }`}
           >
             {tab.name}
             <span
               className={`px-2 py-1 text-xs rounded-full ${activeTab === tab.key
-                  ? "bg-blue-500 text-white"
-                  : tab.key === "completed"
-                    ? "bg-green-100 text-green-800"
-                    : tab.key === "cancelled"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-blue-100 text-blue-800"
+                ? "bg-blue-500 text-white"
+                : tab.key === "completed"
+                  ? "bg-green-100 text-green-800"
+                  : tab.key === "cancelled"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-blue-100 text-blue-800"
                 }`}
             >
               {tab.count}
             </span>
           </button>
         ))}
+      </div>
+
+      {/* Filter row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="relative">
+          <label className="block text-xs font-medium text-gray-500 mb-1">Filter by Customer</label>
+          <input
+            type="text"
+            placeholder="Search customer..."
+            value={customerSearch}
+            onChange={(e) => setCustomerSearch(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <svg className="absolute right-3 top-[34px] w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <div className="relative">
+          <label className="block text-xs font-medium text-gray-500 mb-1">Filter by Staff</label>
+          <input
+            type="text"
+            placeholder="Search staff..."
+            value={staffSearch}
+            onChange={(e) => setStaffSearch(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <svg className="absolute right-3 top-[34px] w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Filter by Type</label>
+          <select
+            value={sourceSearch}
+            onChange={(e) => setSourceSearch(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          >
+            <option value="all">All Types</option>
+            <option value="dine-in">Dine-in</option>
+            <option value="takeaway">Takeaway</option>
+            <option value="phone">Phone Order</option>
+            <option value="online">Online Order</option>
+          </select>
+        </div>
       </div>
 
       {/* Orders table */}
@@ -192,14 +258,14 @@ const OrdersTable = () => {
                   </td>
                   <td className="py-3 px-4">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${order.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'preparing' ? 'bg-orange-100 text-orange-800' :
-                              order.status === 'ready' ? 'bg-green-100 text-green-800' :
-                                order.status === 'served' ? 'bg-purple-100 text-purple-800' :
-                                  order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'preparing' ? 'bg-orange-100 text-orange-800' :
+                            order.status === 'ready' ? 'bg-green-100 text-green-800' :
+                              order.status === 'served' ? 'bg-purple-100 text-purple-800' :
+                                order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
                       }`}>
                       {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown'}
                     </span>

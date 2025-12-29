@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import Header from "./components/take-order-components/Header";
 import Menu from "./components/take-order-components/Menu";
@@ -7,9 +7,9 @@ import Footer from "./components/take-order-components/Footer";
 import DiscountModal from "./components/take-order-components/DiscountModal";
 import { TAX_RATE, SERVICE_CHARGE_RATE } from "./utils/constants";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
-import { createOrder } from "./utils/orders";
-import { createKOT } from "./utils/kots";
-import { getCustomers } from "./utils/customers";
+import { useCreateOrderMutation } from "./features/orders/ordersApiSlice";
+import { useCreateKOTMutation } from "./features/kots/kotsApiSlice";
+import { useGetCustomersQuery } from "./features/customers/customersApiSlice";
 
 const PhoneOrder = ({ show, onClose }) => {
   const [orderItems, setOrderItems] = useState([]);
@@ -20,10 +20,18 @@ const PhoneOrder = ({ show, onClose }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedStations, setSelectedStations] = useState([]);
-  const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [selectedWaiterId, setSelectedWaiterId] = useState("");
+
+  // RTK Query Hooks
+  const { data: customersResponse } = useGetCustomersQuery({ isActive: true });
+  const [createOrderApi] = useCreateOrderMutation();
+  const [createKOTApi] = useCreateKOTMutation();
+
+  const customers = useMemo(() => {
+    return customersResponse?.success ? customersResponse.data : [];
+  }, [customersResponse]);
 
   // Delivery details for phone orders
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -43,7 +51,7 @@ const PhoneOrder = ({ show, onClose }) => {
     // Use utility functions to compute all totals, for maintainability
     const subtotal = getSubtotal(orderItems);
     const tax = getTax(subtotal);
-    const serviceCharge = getServiceCharge(subtotal);
+    const serviceChargeResult = getServiceCharge(subtotal);
 
     // Calculate discount
     let discountAmount = 0;
@@ -57,30 +65,9 @@ const PhoneOrder = ({ show, onClose }) => {
       discountAmount = Math.min(discountAmount, subtotal);
     }
 
-    const total = getTotal(subtotal, tax, serviceCharge) - discountAmount;
-    setTotals({ subtotal, tax, serviceCharge, discount: discountAmount, total: Math.max(0, total) });
+    const totalCalculated = getTotal(subtotal, tax, serviceChargeResult) - discountAmount;
+    setTotals({ subtotal, tax, serviceCharge: serviceChargeResult, discount: discountAmount, total: Math.max(0, totalCalculated) });
   }, [orderItems, discount]);
-
-  // Load customers for selection
-  useEffect(() => {
-    const loadCustomers = async () => {
-      try {
-        const response = await getCustomers({ isActive: true });
-        if (response.success && response.data) {
-          setCustomers(response.data);
-        }
-      } catch (err) {
-        console.error("Error loading customers:", err);
-      }
-    };
-    loadCustomers();
-  }, []);
-
-  // Filter customers based on search term
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-    customer.phone.includes(customerSearchTerm)
-  );
 
   /**
    * Adds a new item to the order or increments the quantity if it already exists.
@@ -214,7 +201,7 @@ const PhoneOrder = ({ show, onClose }) => {
         delete orderData.waiterId; // Remove invalid waiterId
       }
 
-      const orderResponse = await createOrder(orderData);
+      const orderResponse = await createOrderApi(orderData).unwrap();
 
       if (!orderResponse.success || !orderResponse.data?._id) {
         throw new Error("Failed to create phone order");
@@ -225,10 +212,10 @@ const PhoneOrder = ({ show, onClose }) => {
       // Step 2: Create KOTs for each selected station
       const stationsToCreate = selectedStations.length > 0 ? selectedStations : ['kitchen'];
       const kotPromises = stationsToCreate.map((station) =>
-        createKOT(orderId, station)
+        createKOTApi({ orderId, station }).unwrap()
       );
 
-      const kotResponses = await Promise.all(kotPromises);
+      await Promise.all(kotPromises);
 
       // Success
       const stationsMessage = selectedStations.length > 0
@@ -253,40 +240,9 @@ const PhoneOrder = ({ show, onClose }) => {
         setSuccess("");
         onClose();
       }, 2000);
-    } catch (error) {
-      console.error("Error creating phone order/KOT:", error);
-
-      // Handle authentication errors
-      if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          // Redirect is already happening from api.js
-          return;
-        }
-
-        setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-          window.location.href = '/login';
-        }, 2000);
-      } else if (error.status === 400 && error.validationErrors && error.validationErrors.length > 0) {
-        // Handle validation errors
-        const validationMessages = error.validationErrors.map(err => {
-          const field = err.field || 'unknown';
-          const message = err.message || 'Invalid value';
-          const formattedField = field.replace(/\./g, ' ').replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          return `${formattedField}: ${message}`;
-        });
-        setError(`Validation failed:\n${validationMessages.join('\n')}`);
-      } else {
-        // Other errors
-        setError(
-          error.message ||
-            "Failed to create phone order and send KOT. Please try again."
-        );
-      }
+    } catch (err) {
+      console.error("Error creating phone order/KOT:", err);
+      setError(err.data?.message || err.message || "Failed to create phone order and send KOT. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -8,16 +8,16 @@ import React from "react";
 const FilterDropdowns = ({ filters, onFilterChange }) => {
   // Define filter options
   const categoryOptions = [
-    "All Categories",
-    "Vegetables",
-    "Meat",
-    "Dairy",
-    "Condiments",
-    "Grains",
-    "Beverages",
-    "Frozen",
-    "Dryfood",
-    "Other",
+    { label: "All Categories", value: "All Categories" },
+    { label: "Vegetables", value: "vegetable" },
+    { label: "Fruit", value: "fruit" },
+    { label: "Meat", value: "meat" },
+    { label: "Dairy", value: "dairy" },
+    { label: "Beverage", value: "beverage" },
+    { label: "Spice", value: "spice" },
+    { label: "Grain", value: "grain" },
+    { label: "Dryfood", value: "dryfood" },
+    { label: "Other", value: "other" },
   ];
 
   const statusOptions = ["All Status", "In Stock", "Low Stock", "Out of Stock"];
@@ -35,8 +35,8 @@ const FilterDropdowns = ({ filters, onFilterChange }) => {
           onChange={(e) => onFilterChange("category", e.target.value)}
         >
           {categoryOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>

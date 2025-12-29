@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   TitleBar,
@@ -7,9 +7,18 @@ import {
   Shortcuts,
   TableOrderModal,
   ServingSummaryModal,
+  ServingInfoPage
 } from "./components/restaurant-table-components";
 import AddTable from "./AddTable";
-import { createTable, getTables, deleteTable, updateTableStatus, transferTable, completeCleaning } from "./utils/tables";//new
+import {
+  useGetTablesQuery,
+  useCreateTableMutation,
+  useDeleteTableMutation,
+  useUpdateTableStatusMutation,
+  useTransferTableMutation,
+  useCompleteCleaningMutation
+} from "./features/tables/tablesApiSlice";
+import { useLazyGetOrderByIdQuery } from "./features/orders/ordersApiSlice";
 
 /**
  * RestaurantTables page aggregates all sections:
@@ -27,8 +36,6 @@ const RestaurantTables = () => {
   const [isAddTableModalOpen, setIsAddTableModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // State for delete functionality
   const [selectedTableForDeletion, setSelectedTableForDeletion] = useState(null);
@@ -51,51 +58,41 @@ const RestaurantTables = () => {
   const [selectedServingLocation, setSelectedServingLocation] = useState('indoor');
   const [showServingInfo, setShowServingInfo] = useState(false);
 
-  // Fetch tables from API when filters change
-  useEffect(() => {
-    const fetchTables = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  // RTK Query Hooks
+  const { data: tablesResponse, isLoading: tablesLoading, error: tablesError } = useGetTablesQuery({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    location: locationFilter || undefined
+  }, {
+    pollingInterval: 15000,
+    refetchOnMountOrArgChange: true,
+    skip: !localStorage.getItem('authToken')
+  });
 
-        // Build filter object for API
-        const filters = {};
+  // const [triggerGetOrder, { isLoading: orderLoading }] = useLazyGetOrderByIdQuery();
+  const [triggerGetOrder] = useLazyGetOrderByIdQuery();
 
-        // Map frontend status to backend status
-        if (statusFilter !== "all") {
-          filters.status = statusFilter;
-        }
+  const [createTable] = useCreateTableMutation();
+  const [deleteTable] = useDeleteTableMutation();
+  const [transferTable] = useTransferTableMutation();
+  const [completeCleaning] = useCompleteCleaningMutation();
+  const [updateTableStatus] = useUpdateTableStatusMutation();
 
-        if (locationFilter) {
-          filters.location = locationFilter;
-        }
+  // Derived tables list
+  const tables = useMemo(() => {
+    let filteredTables = tablesResponse?.data || [];
 
-        const response = await getTables(filters);
-        if (response.success && response.data) {
-          let filteredTables = response.data;
-
-          // Apply capacity filter on frontend (since backend might not support it)
-          if (capacityFilter) {
-            const capacity = parseInt(capacityFilter);
-            if (capacity === 8) {
-              filteredTables = filteredTables.filter(t => t.capacity >= 8);
-            } else {
-              filteredTables = filteredTables.filter(t => t.capacity === capacity);
-            }
-          }
-
-          setTables(filteredTables);
-        }
-      } catch (error) {
-        console.error("Error fetching tables:", error);
-        setError("Failed to load tables. Please try again later.");
-      } finally {
-        setLoading(false);
+    // Apply capacity filter on frontend (since backend might not support it)
+    if (capacityFilter) {
+      const capacity = parseInt(capacityFilter);
+      if (capacity === 8) {
+        filteredTables = filteredTables.filter(t => t.capacity >= 8);
+      } else {
+        filteredTables = filteredTables.filter(t => t.capacity === capacity);
       }
-    };
+    }
 
-    fetchTables();
-  }, [statusFilter, capacityFilter, locationFilter]);
+    return filteredTables;
+  }, [tablesResponse, capacityFilter]);
 
   // Transform API table data to format expected by TableCard
   const transformTable = (table) => ({
@@ -163,33 +160,10 @@ const RestaurantTables = () => {
       setError("");
       setSuccess("");
 
-      const response = await createTable(tableData);
+      const response = await createTable(tableData).unwrap();
 
       if (response.success) {
         setSuccess(`Table ${response.data.tableNumber || "N/A"} added successfully!`);
-
-        // Fetch updated tables list with current filters
-        const filters = {};
-        if (statusFilter !== "all") {
-          filters.status = statusFilter;
-        }
-        if (locationFilter) {
-          filters.location = locationFilter;
-        }
-
-        const updatedResponse = await getTables(filters);
-        if (updatedResponse.success && updatedResponse.data) {
-          let filteredTables = updatedResponse.data;
-          if (capacityFilter) {
-            const capacity = parseInt(capacityFilter);
-            if (capacity === 8) {
-              filteredTables = filteredTables.filter(t => t.capacity >= 8);
-            } else {
-              filteredTables = filteredTables.filter(t => t.capacity === capacity);
-            }
-          }
-          setTables(filteredTables);
-        }
 
         // Close modal after 1.5 seconds
         setTimeout(() => {
@@ -201,65 +175,41 @@ const RestaurantTables = () => {
       console.error("Error adding table:", error);
 
       // Handle network errors
-      if (error.message === "Failed to fetch" || error.message.includes("ERR_CONNECTION_REFUSED")) {
+      if (error.message === "Failed to fetch" || error.message?.includes("ERR_CONNECTION_REFUSED")) {
         setError("Cannot connect to server. Please make sure the backend server is running on port 3000.");
         return;
       }
 
       // Handle permission errors (403 Forbidden)
-      if (error.status === 403 || error.message.includes('Access denied') || error.message.includes('Insufficient permissions') || error.message.includes('permission')) {
-        // Get user role from localStorage if available
-        let userRole = 'Unknown';
-        try {
-          const userData = localStorage.getItem('userData');
-          if (userData) {
-            const parsed = JSON.parse(userData);
-            userRole = parsed.role || 'Unknown';
-          }
-        } catch (e) {
-          // Ignore parsing errors
-        }
-
-        setError(`Access Denied: You don't have permission to create tables.\n\nRequired roles: Owner, Admin, or Manager\nYour role: ${userRole}\n\nPlease contact your administrator to get the required permissions.`);
+      if (error.status === 403 || error.data?.message?.includes('Access denied') || error.data?.message?.includes('Insufficient permissions')) {
+        setError(`Access Denied: You don't have permission to create tables.`);
       }
       // Handle authentication errors
-      else if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        // If refresh already failed and redirected, don't show error
-        if (error.isRefreshFailure) {
-          // Redirect is already happening from api.js, just clear local state
-          return;
-        }
-
+      else if (error.status === 401) {
         setError("Your session has expired. Please login again.");
-        // Redirect to login after 2 seconds
         setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
           navigate('/login');
         }, 2000);
-      } else if (error.status === 400 && error.validationErrors && error.validationErrors.length > 0) {
-        // Handle validation errors - show detailed messages
-        const validationMessages = error.validationErrors.map(err => {
-          const field = err.field || 'unknown';
-          const message = err.message || 'Invalid value';
-          const formattedField = field.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          return `${formattedField}: ${message}`;
+      } else if (error.status === 409) {
+        setError(`Conflict: Table number ${tableData.tableNumber} already exists in your restaurant.`);
+      } else if (error.status === 400 && error.data?.validationErrors && error.data.validationErrors.length > 0) {
+        // Handle validation errors
+        const validationMessages = error.data.validationErrors.map(err => {
+          return `${err.field}: ${err.message}`;
         });
         setError(`Validation failed:\n${validationMessages.join('\n')}`);
       } else {
-        // Show error message (may include validation details)
-        setError(error.message || "Failed to add table. Please try again.");
+        // Show error message
+        setError(error.data?.message || error.message || "Failed to add table. Please try again.");
       }
     }
   };
 
   // Handler for table selection for deletion
-  const handleTableSelectForDeletion = (tableId) => {
-    setSelectedTableForDeletion(tableId);
-    setShowDeleteConfirmation(true);
-  };
+  // const handleTableSelectForDeletion = (tableId) => {
+  //   setSelectedTableForDeletion(tableId);
+  //   setShowDeleteConfirmation(true);
+  // };
 
   // Handler for delete table
   const handleDeleteTable = () => {
@@ -274,33 +224,10 @@ const RestaurantTables = () => {
       setError("");
       setSuccess("");
 
-      const response = await deleteTable(selectedTableForDeletion);
+      const response = await deleteTable(selectedTableForDeletion).unwrap();
 
       if (response.success) {
         setSuccess(`Table deleted successfully!`);
-
-        // Refresh tables list
-        const filters = {};
-        if (statusFilter !== "all") {
-          filters.status = statusFilter;
-        }
-        if (locationFilter) {
-          filters.location = locationFilter;
-        }
-
-        const updatedResponse = await getTables(filters);
-        if (updatedResponse.success && updatedResponse.data) {
-          let filteredTables = updatedResponse.data;
-          if (capacityFilter) {
-            const capacity = parseInt(capacityFilter);
-            if (capacity === 8) {
-              filteredTables = filteredTables.filter(t => t.capacity >= 8);
-            } else {
-              filteredTables = filteredTables.filter(t => t.capacity === capacity);
-            }
-          }
-          setTables(filteredTables);
-        }
 
         // Reset selection and hide confirmation
         setSelectedTableForDeletion(null);
@@ -313,46 +240,7 @@ const RestaurantTables = () => {
       }
     } catch (error) {
       console.error("Error deleting table:", error);
-
-      // Handle network errors
-      if (error.message === "Failed to fetch" || error.message.includes("ERR_CONNECTION_REFUSED")) {
-        setError("Cannot connect to server. Please make sure the backend server is running on port 3000.");
-        return;
-      }
-
-      // Handle permission errors (403 Forbidden)
-      if (error.status === 403 || error.message.includes('Access denied') || error.message.includes('Insufficient permissions') || error.message.includes('permission')) {
-        let userRole = 'Unknown';
-        try {
-          const userData = localStorage.getItem('userData');
-          if (userData) {
-            const parsed = JSON.parse(userData);
-            userRole = parsed.role || 'Unknown';
-          }
-        } catch (e) {
-          // Ignore parsing errors
-        }
-
-        setError(`Access Denied: You don't have permission to delete tables.\n\nRequired roles: Owner, Admin, or Manager\nYour role: ${userRole}\n\nPlease contact your administrator to get the required permissions.`);
-      }
-      // Handle authentication errors
-      else if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized') || error.message.includes('expired') || error.isRefreshFailure) {
-        if (error.isRefreshFailure) {
-          return;
-        }
-
-        setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-          navigate('/login');
-        }, 2000);
-      } else {
-        setError(error.message || "Failed to delete table. Please try again.");
-      }
-
+      setError(error.data?.message || "Failed to delete table. Please try again.");
       setShowDeleteConfirmation(false);
     }
   };
@@ -368,19 +256,14 @@ const RestaurantTables = () => {
   const handleTransferTable = async (tableNumber) => {
     try {
       setError("");
-      const response = await transferTable(tableNumber);
+      const response = await transferTable(tableNumber).unwrap();
       if (response.success) {
-        // Refresh tables to show updated status
-        const tablesResponse = await getTables();
-        if (tablesResponse.success && tablesResponse.data) {
-          setTables(tablesResponse.data);
-        }
         setSuccess(`Table ${tableNumber} transferred successfully`);
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (error) {
       console.error("Error transferring table:", error);
-      setError(error.message || "Failed to transfer table");
+      setError(error.data?.message || "Failed to transfer table");
       setTimeout(() => setError(""), 5000);
     }
   };
@@ -389,19 +272,14 @@ const RestaurantTables = () => {
   const handleCompleteCleaning = async (tableNumber) => {
     try {
       setError("");
-      const response = await completeCleaning(tableNumber);
+      const response = await completeCleaning(tableNumber).unwrap();
       if (response.success) {
-        // Refresh tables to show updated status
-        const tablesResponse = await getTables();
-        if (tablesResponse.success && tablesResponse.data) {
-          setTables(tablesResponse.data);
-        }
         setSuccess(`Table ${tableNumber} cleaning completed successfully`);
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (error) {
       console.error("Error completing cleaning:", error);
-      setError(error.message || "Failed to complete cleaning");
+      setError(error.data?.message || "Failed to complete cleaning");
       setTimeout(() => setError(""), 5000);
     }
   };
@@ -410,19 +288,30 @@ const RestaurantTables = () => {
   const handleSetTableTransfer = async (tableId) => {
     try {
       setError("");
-      const response = await updateTableStatus(tableId, 'transfer');
+      const response = await updateTableStatus({ tableId, status: 'transfer' }).unwrap();
       if (response.success) {
-        // Refresh tables to show updated status
-        const tablesResponse = await getTables();
-        if (tablesResponse.success && tablesResponse.data) {
-          setTables(tablesResponse.data);
-        }
         setSuccess(`Table set to transfer status successfully`);
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (error) {
       console.error("Error setting table to transfer:", error);
-      setError(error.message || "Failed to set table to transfer");
+      setError(error.data?.message || "Failed to set table to transfer");
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
+  // Handler for updating table status explicitly
+  const handleUpdateStatus = async (tableId, newStatus) => {
+    try {
+      setError("");
+      const response = await updateTableStatus({ tableId, status: newStatus }).unwrap();
+      if (response.success) {
+        setSuccess(`Table status updated to ${newStatus} successfully`);
+        setTimeout(() => setSuccess(""), 3000);
+      }
+    } catch (error) {
+      console.error("Error updating table status:", error);
+      setError(error.data?.message || `Failed to update table status to ${newStatus}`);
       setTimeout(() => setError(""), 5000);
     }
   };
@@ -431,16 +320,12 @@ const RestaurantTables = () => {
   const handleTableClick = async (tableNumber, currentOrder, tableLocation) => {
     if (currentOrder && currentOrder._id) {
       try {
-        setLoading(true);
         setError("");
 
-        // Fetch full order details
-        const { getOrderById } = await import("./utils/orders");
-        const response = await getOrderById(currentOrder._id);
+        // Fetch full order details using lazy query hook
+        const response = await triggerGetOrder(currentOrder._id).unwrap();
 
         if (response.success && response.data) {
-          // Show serving summary modal for both serving and reserved tables
-          // This provides the "popup box page" the user requested
           setSelectedServingOrder(response.data);
           setSelectedServingTableNumber(tableNumber);
           setSelectedServingLocation(tableLocation);
@@ -450,9 +335,7 @@ const RestaurantTables = () => {
         }
       } catch (err) {
         console.error("Error loading order details:", err);
-        setError(err.message || "Failed to load order details");
-      } finally {
-        setLoading(false);
+        setError(err.data?.message || err.message || "Failed to load order details");
       }
     }
   };
@@ -480,8 +363,14 @@ const RestaurantTables = () => {
         <div className="mt-8">
           <div className="w-full">
             <div className="space-y-8">
-              {loading ? (
+              {tablesLoading ? (
                 <div className="text-center py-8 text-gray-500">Loading tables...</div>
+              ) : showServingInfo ? (
+                <ServingInfoPage
+                  tables={tables.map(transformTable)}
+                  onTableClick={handleTableClick}
+                  onUpdateStatus={handleUpdateStatus}
+                />
               ) : (
                 <>
                   {/* Render tables grouped by location */}
@@ -498,6 +387,7 @@ const RestaurantTables = () => {
                           onTransferTable={handleTransferTable}
                           onCompleteCleaning={handleCompleteCleaning}
                           onSetTableTransfer={handleSetTableTransfer}
+                          onUpdateStatus={handleUpdateStatus}
                           onTableClick={handleTableClick}
                           showServingInfo={showServingInfo}
                         />
@@ -507,9 +397,14 @@ const RestaurantTables = () => {
                   })}
 
                   {/* Show message if no tables exist */}
-                  {tables.length === 0 && !loading && (
+                  {tables.length === 0 && !tablesLoading && (
                     <div className="text-center py-8 text-gray-500">
                       No tables found matching your filters. Try adjusting your filters or click "Add Table" to create a new table.
+                    </div>
+                  )}
+                  {tablesError && (
+                    <div className="text-center py-8 text-red-500">
+                      Error loading tables: {tablesError.status === 'FETCH_ERROR' ? 'Connection Error' : tablesError.data?.message || 'Unknown Error'}
                     </div>
                   )}
                 </>
@@ -623,19 +518,20 @@ const RestaurantTables = () => {
         order={selectedTableOrder}
       />
 
-      {/* Serving Summary Modal for Patio Area Serving Tables */}
-      <ServingSummaryModal
-        isOpen={isServingSummaryModalOpen}
-        onClose={() => {
-          setIsServingSummaryModalOpen(false);
-          setSelectedServingOrder(null);
-          setSelectedServingTableNumber(null);
-          setSelectedServingLocation('indoor');
-        }}
-        tableNumber={selectedServingTableNumber}
-        order={selectedServingOrder}
-        location={selectedServingLocation}
-      />
+      {/* Serving Summary Modal */}
+      {isServingSummaryModalOpen && (
+        <ServingSummaryModal
+          isOpen={isServingSummaryModalOpen}
+          onClose={() => {
+            setIsServingSummaryModalOpen(false);
+            setSelectedServingOrder(null);
+          }}
+          order={selectedServingOrder}
+          tableNumber={selectedServingTableNumber}
+          location={selectedServingLocation}
+        />
+      )}
+
     </div>
   );
 };

@@ -4,4 +4,6 @@ export { default as NavigationTabs } from "./NavigationTabs";
 export { default as FilterDropdowns } from "./FilterDropdowns";
 export { default as StockOverviewTable } from "./StockOverviewTable";
 export { default as ItemDetailsPanel } from "./ItemDetailsPanel";
-//export { default as SummaryCards } from "./SummaryCards";
+export { default as VendorsTable } from "./VendorsTable";
+export { default as POTable } from "./POTable";
+export { default as WastageTable } from "./WastageTable";

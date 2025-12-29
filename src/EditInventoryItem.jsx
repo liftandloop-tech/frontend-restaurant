@@ -47,7 +47,9 @@ const EditInventoryItem = ({ isOpen, onClose, onSubmit, item }) => {
         maxStockLevel: item.maxStockLevel || "",
         pricePerUnit: item.pricePerUnit || "",
         vendor: item.vendor || "",
-        expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : "",
+        expiryDate: item.expiryDate && !isNaN(new Date(item.expiryDate).getTime())
+          ? new Date(item.expiryDate).toISOString().split('T')[0]
+          : "",
         batchNumber: item.batchNumber || "",
         location: item.location || "",
         notes: item.notes || "",
@@ -158,13 +160,14 @@ const EditInventoryItem = ({ isOpen, onClose, onSubmit, item }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={loading}
               >
-                <option value="vegetables">Vegetables</option>
-                <option value="fruits">Fruits</option>
+                <option value="vegetable">Vegetable</option>
+                <option value="fruit">Fruit</option>
                 <option value="meat">Meat</option>
                 <option value="dairy">Dairy</option>
-                <option value="grains">Grains</option>
-                <option value="condiments">Condiments</option>
-                <option value="beverages">Beverages</option>
+                <option value="beverage">Beverage</option>
+                <option value="spice">Spice</option>
+                <option value="grain">Grain</option>
+                <option value="dryfood">Dryfood</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -247,7 +250,7 @@ const EditInventoryItem = ({ isOpen, onClose, onSubmit, item }) => {
             {/* Price Per Unit */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Per Unit ($)
+                Price Per Unit (₹)
               </label>
               <input
                 type="number"

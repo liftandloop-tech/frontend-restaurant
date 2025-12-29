@@ -108,6 +108,16 @@ const FilterBar = ({
           <option value="2">2+ Stars</option>
           <option value="1">1+ Stars</option>
         </select>
+
+        <select
+          className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          onChange={(e) => handleFilterChange("type", e.target.value)}
+        >
+          <option value="">All Guest Types</option>
+          <option value="vip">VIP Customers</option>
+          <option value="regular">Regular Customers</option>
+          <option value="revenue_card">Revenue Card Users</option>
+        </select>
       </div>
 
       {/* Active Filters */}

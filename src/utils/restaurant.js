@@ -12,12 +12,8 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const createRestaurant = async (restaurantData) => {
-  try {
-    const response = await api.post('restaurants/create', restaurantData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('restaurants/create', restaurantData);
+  return response;
 };
 
 /**
@@ -26,12 +22,8 @@ export const createRestaurant = async (restaurantData) => {
  * @returns {Promise} Response from backend
  */
 export const getRestaurantById = async (restaurantId) => {
-  try {
-    const response = await api.get(`restaurants/get/${restaurantId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`restaurants/get/${restaurantId}`);
+  return response;
 };
 
 /**
@@ -39,12 +31,8 @@ export const getRestaurantById = async (restaurantId) => {
  * @returns {Promise} Response from backend
  */
 export const getMyRestaurant = async () => {
-  try {
-    const response = await api.get('restaurants/get/my');
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get('restaurants/get/my');
+  return response;
 };
 
 /**
@@ -54,12 +42,8 @@ export const getMyRestaurant = async () => {
  * @returns {Promise} Response from backend
  */
 export const updateRestaurant = async (restaurantId, updateData) => {
-  try {
-    const response = await api.put(`restaurants/update/${restaurantId}`, updateData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`restaurants/update/${restaurantId}`, updateData);
+  return response;
 };
 
 /**
@@ -68,12 +52,8 @@ export const updateRestaurant = async (restaurantId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const deleteRestaurant = async (restaurantId) => {
-  try {
-    const response = await api.delete(`restaurants/delete/${restaurantId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.delete(`restaurants/delete/${restaurantId}`);
+  return response;
 };
 
 /**
@@ -82,14 +62,10 @@ export const deleteRestaurant = async (restaurantId) => {
  * @returns {Promise} Response from backend
  */
 export const getAllRestaurants = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `restaurants/get/all?${queryParams}` : 'restaurants/get/all';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `restaurants/get/all?${queryParams}` : 'restaurants/get/all';
+  const response = await api.get(endpoint);
+  return response;
 };
 
 /**
@@ -98,12 +74,8 @@ export const getAllRestaurants = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const getRestaurantStats = async (restaurantId) => {
-  try {
-    const response = await api.get(`restaurants/stats/${restaurantId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`restaurants/stats/${restaurantId}`);
+  return response;
 };
 
 /**
@@ -111,12 +83,8 @@ export const getRestaurantStats = async (restaurantId) => {
  * @returns {Promise} Response from backend
  */
 export const getMyRestaurantStats = async () => {
-  try {
-    const response = await api.get('restaurants/stats/my');
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get('restaurants/stats/my');
+  return response;
 };
 
 /**
@@ -126,12 +94,8 @@ export const getMyRestaurantStats = async () => {
  * @returns {Promise} Response from backend
  */
 export const updateRestaurantLicense = async (restaurantId, licenseKey) => {
-  try {
-    const response = await api.put(`restaurants/license/${restaurantId}`, { licenseKey });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`restaurants/license/${restaurantId}`, { licenseKey });
+  return response;
 };
 
 /**
@@ -141,12 +105,8 @@ export const updateRestaurantLicense = async (restaurantId, licenseKey) => {
  * @returns {Promise} Response from backend
  */
 export const addBillToRestaurantAccount = async (billAmount, billId) => {
-  try {
-    const response = await api.post('restaurants/add-bill-amount', { billAmount, billId });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('restaurants/add-bill-amount', { billAmount, billId });
+  return response;
 };
 // new for w
 /**
@@ -155,37 +115,33 @@ export const addBillToRestaurantAccount = async (billAmount, billId) => {
  * @returns {Promise} Response from backend
  */
 export const createDefaultRestaurant = async (restaurantData = {}) => {
-  try {
-    // Get current user data from localStorage
-    const userData = localStorage.getItem('userData');
-    if (!userData) {
-      throw new Error('User not authenticated');
-    }
-
-    const user = JSON.parse(userData);
-
-    // Create default restaurant data
-    const defaultData = {
-      name: `${user.name || 'User'}'s Restaurant`,
-      email: user.email,
-      phone: user.mobile || '',
-      description: 'Auto-created restaurant for business management',
-      address: {
-        street: 'Default Address',
-        city: 'Default City',
-        state: 'Default State',
-        country: 'India'
-      },
-      currency: 'INR',
-      taxRate: 18,
-      ...restaurantData // Allow overriding defaults
-    };
-
-    const response = await api.post('restaurants/create', defaultData);
-    return response;
-  } catch (error) {
-    throw error;
+  // Get current user data from localStorage
+  const userData = localStorage.getItem('userData');
+  if (!userData) {
+    throw new Error('User not authenticated');
   }
+
+  const user = JSON.parse(userData);
+
+  // Create default restaurant data
+  const defaultData = {
+    name: `${user.name || 'User'}'s Restaurant`,
+    email: user.email,
+    phone: user.mobile || '',
+    description: 'Auto-created restaurant for business management',
+    address: {
+      street: 'Default Address',
+      city: 'Default City',
+      state: 'Default State',
+      country: 'India'
+    },
+    currency: 'INR',
+    taxRate: 18,
+    ...restaurantData // Allow overriding defaults
+  };
+
+  const response = await api.post('restaurants/create', defaultData);
+  return response;
 };
 
 /**

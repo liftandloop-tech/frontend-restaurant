@@ -8,30 +8,35 @@ import CompletedOrderCard from "./components/order-management-components/Complet
 import OrderDetails from "./components/order-management-components/OrderDetails";
 import OrdersTable from "./components/order-management-components/OrdersTable";
 import {
-  getOrders,
-  updateOrderStatus,
-  cancelOrder,
-} from "./utils/orders";
+  useGetOrdersQuery,
+  useUpdateOrderStatusMutation,
+  useCancelOrderMutation,
+} from "./features/orders/ordersApiSlice";
 
 const OrderManagement = ({ onOpenPhoneOrder }) => {
   const navigate = useNavigate(); // React Router navigation
-  const [activeOrders, setActiveOrders] = useState([]);
-  const [completedOrders, setCompletedOrders] = useState([]);
-  const [cancelledOrders, setCancelledOrders] = useState([]);
-  const [draftOrders, setDraftOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState(""); // setSearchTerm was unused
   const [statusFilter, setStatusFilter] = useState("active");
   const [customerFilter, setCustomerFilter] = useState("");
   const [viewMode, setViewMode] = useState("cards"); // "cards" or "table"
   const [sortBy, setSortBy] = useState("orderTime");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const mapOrderFromApi = (order) => {
+  // RTK Query hooks
+  const { data: ordersResponse, isLoading: loading, refetch: loadOrders } = useGetOrdersQuery();
+  const [updateOrderStatusApi] = useUpdateOrderStatusMutation();
+  const [cancelOrderApi] = useCancelOrderMutation();
+
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [completedOrders, setCompletedOrders] = useState([]);
+  const [cancelledOrders, setCancelledOrders] = useState([]);
+  const [draftOrders, setDraftOrders] = useState([]);
+
+  const mapOrderFromApi = useCallback((order) => {
     const totalAmount =
       order.total ??
       order.totalAmount ??
@@ -43,7 +48,6 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
       orderNumber: order.orderNumber || order._id?.slice(-6) || "Order",
       customerName:
         order.customerName ||
-        //order.customerId?.name ||
         order.customerId?.name ||
         "Guest",
       tableNumber: order.tableNumber
@@ -71,57 +75,28 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
       notes: order.notes || "",
       raw: order,
     };
-  };
+  }, []);
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await getOrders();
-      if (!response?.success || !Array.isArray(response.data)) {
-        throw new Error(response?.message || "Failed to fetch orders");
-      }
-
-      const mappedOrders = response.data.map(mapOrderFromApi);
+  useEffect(() => {
+    if (ordersResponse?.success && Array.isArray(ordersResponse.data)) {
+      const mappedOrders = ordersResponse.data.map(mapOrderFromApi);
 
       const activeStatuses = ["pending", "confirmed", "preparing", "ready"];
       const completedStatuses = ["served", "completed"];
       const cancelledStatuses = ["cancelled"];
       const draftStatuses = ["draft"];
 
-      const active = mappedOrders.filter((order) =>
-        activeStatuses.includes(order.status)
-      );
-      const completed = mappedOrders.filter((order) =>
-        completedStatuses.includes(order.status)
-      );
-      const cancelled = mappedOrders.filter((order) =>
-        cancelledStatuses.includes(order.status)
-      );
-      const draft = mappedOrders.filter((order) =>
-        draftStatuses.includes(order.status)
-      );
+      setActiveOrders(mappedOrders.filter((order) => activeStatuses.includes(order.status)));
+      setCompletedOrders(mappedOrders.filter((order) => completedStatuses.includes(order.status)));
+      setCancelledOrders(mappedOrders.filter((order) => cancelledStatuses.includes(order.status)));
+      setDraftOrders(mappedOrders.filter((order) => draftStatuses.includes(order.status)));
 
-      setActiveOrders(active);
-      setCompletedOrders(completed);
-      setCancelledOrders(cancelled);
-      setDraftOrders(draft);
-      setSelectedOrder((prev) =>
-        prev
-          ? mappedOrders.find((order) => order.id === prev.id) || null
-          : null
-      );
-    } catch (err) {
-      console.error("Failed to load orders:", err);
-      setError(err.message || "Unable to load orders");
-    } finally {
-      setLoading(false);
+      if (selectedOrder) {
+        const updated = mappedOrders.find((order) => order.id === selectedOrder.id);
+        if (updated) setSelectedOrder(updated);
+      }
     }
-  }, []);
-
-  useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+  }, [ordersResponse, selectedOrder, mapOrderFromApi]);
 
   const handleOrderSelect = (order) => {
     setSelectedOrder(order);
@@ -132,7 +107,7 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
     setSortOrder(order);
   };
 
-  const handleOrderAction = async (orderId, nextStatus, actionKey) => {
+  const handleOrderAction = async (orderId, nextStatus) => {
     if (!orderId || !nextStatus) return;
 
     setIsUpdating(true);
@@ -140,14 +115,13 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
 
     try {
       if (nextStatus === "cancelled") {
-        await cancelOrder(orderId, "Cancelled via Order Management");
+        await cancelOrderApi({ orderId, reason: "Cancelled via Order Management" }).unwrap();
       } else {
-        await updateOrderStatus(orderId, nextStatus);
+        await updateOrderStatusApi({ orderId, status: nextStatus }).unwrap();
       }
-      await loadOrders();
     } catch (err) {
       console.error("Failed to update order:", err);
-      setError(err.message || "Failed to update order status");
+      setError(err.data?.message || err.message || "Failed to update order status");
     } finally {
       setIsUpdating(false);
     }

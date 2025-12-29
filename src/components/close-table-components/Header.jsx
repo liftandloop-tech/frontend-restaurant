@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Header = ({ tableCode, seats, orderKots, serverName }) => {
+const Header = ({ tableCode, seats, serverName }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center justify-between">
@@ -49,7 +49,6 @@ const Header = ({ tableCode, seats, orderKots, serverName }) => {
 Header.propTypes = {
   tableCode: PropTypes.string.isRequired,
   seats: PropTypes.number.isRequired,
-  orderKots: PropTypes.number.isRequired,
   serverName: PropTypes.string.isRequired,
 };
 

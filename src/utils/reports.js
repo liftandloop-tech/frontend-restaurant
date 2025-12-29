@@ -12,14 +12,10 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const exportPDF = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `reports/export/pdf?${queryParams}` : 'reports/export/pdf';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `reports/export/pdf?${queryParams}` : 'reports/export/pdf';
+  const response = await api.get(endpoint);
+  return response;
 };
 
 /**
@@ -28,12 +24,8 @@ export const exportPDF = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const createScheduledReport = async (scheduleData) => {
-  try {
-    const response = await api.post('reports/schedule', scheduleData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('reports/schedule', scheduleData);
+  return response;
 };
 
 /**
@@ -41,12 +33,8 @@ export const createScheduledReport = async (scheduleData) => {
  * @returns {Promise} Response from backend
  */
 export const getScheduledReports = async () => {
-  try {
-    const response = await api.get('reports/schedule');
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get('reports/schedule');
+  return response;
 };
 
 /**
@@ -56,12 +44,8 @@ export const getScheduledReports = async () => {
  * @returns {Promise} Response from backend
  */
 export const updateScheduledReport = async (reportId, updateData) => {
-  try {
-    const response = await api.put(`reports/schedule/${reportId}`, updateData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`reports/schedule/${reportId}`, updateData);
+  return response;
 };
 
 /**
@@ -70,11 +54,6 @@ export const updateScheduledReport = async (reportId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const deleteScheduledReport = async (reportId) => {
-  try {
-    const response = await api.delete(`reports/schedule/${reportId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.delete(`reports/schedule/${reportId}`);
+  return response;
 };
-

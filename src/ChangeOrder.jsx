@@ -5,18 +5,18 @@ import Menu from "./components/change-order-components/Menu";
 import OrderSummary from "./components/change-order-components/OrderSummary";
 import Footer from "./components/change-order-components/Footer";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
-import { updateOrder } from "./utils/orders";
-import { createKOT } from "./utils/kots";
+import { useUpdateOrderMutation } from "./features/orders/ordersApiSlice";
+import { useCreateKOTMutation } from "./features/kots/kotsApiSlice";
 
 const mapOrderItems = (items) =>
   Array.isArray(items)
     ? items.map((item, index) => ({
-        id: item._id || item.id || `item-${index}`,
-        name: item.name,
-        price: Number(item.price ?? 0),
-        quantity: Number(item.quantity ?? item.qty ?? 0) || 1,
-        category: item.category || "Menu",
-      }))
+      id: item._id || item.id || `item-${index}`,
+      name: item.name,
+      price: Number(item.price ?? 0),
+      quantity: Number(item.quantity ?? item.qty ?? 0) || 1,
+      category: item.category || "Menu",
+    }))
     : [];
 
 const ChangeOrder = ({
@@ -39,21 +39,21 @@ const ChangeOrder = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [selectedStations, setSelectedStations] = useState(["kitchen"]);
+  const [selectedStations] = useState(["kitchen"]);
   const [selectedWaiterId, setSelectedWaiterId] = useState(
     order?.waiterId?._id || order?.waiterId || ""
   );
+
+  const [updateOrderApi] = useUpdateOrderMutation();
+  const [createKOTApi] = useCreateKOTMutation();
 
   useEffect(() => {
     if (show) {
       setOrderItems(mapOrderItems(order?.items ?? initialItems));
       setError("");
       setSuccess("");
-      if(!order && table?.tableNumber){
-        
-      }
     }
-  }, [ order ,show,table]);
+  }, [order, show, initialItems]);
 
   useEffect(() => {
     const subtotal = getSubtotal(orderItems);
@@ -124,6 +124,7 @@ const ChangeOrder = ({
 
     try {
       const payload = {
+        orderId: orderMeta.id,
         items: orderItems.map((item) => ({
           name: item.name,
           qty: item.quantity,
@@ -139,16 +140,12 @@ const ChangeOrder = ({
         payload.notes = orderMeta.notes;
       }
 
-      const response = await updateOrder(orderMeta.id, payload);
-
-      if (!response?.success) {
-        throw new Error(response?.message || "Failed to update order");
-      }
+      await updateOrderApi(payload).unwrap();
 
       // Create KOTs for selected stations after order update
       try {
         const kotPromises = selectedStations.map((station) =>
-          createKOT(orderMeta.id, station)
+          createKOTApi({ orderId: orderMeta.id, station }).unwrap()
         );
         await Promise.all(kotPromises);
         setSuccess(`Order updated and KOTs sent to: ${selectedStations.join(", ")}`);
@@ -158,28 +155,13 @@ const ChangeOrder = ({
         setSuccess("Order updated successfully, but failed to send KOTs. Please try sending KOTs manually.");
       }
 
-      onOrderUpdated?.(response.data);
+      onOrderUpdated?.();
       setTimeout(() => {
         onClose();
       }, 2000);
     } catch (err) {
       console.error("Failed to update order:", err);
-      //Handle authentication errors
-      if(err.status ===401 || err.message.includes('token') || err.message.includes('Unauthorized') || err.message.includes('expired') || err.isRefreshFailure){
-        if(err.isRefreshFailure){
-          return;
-        }
-          setError("your session has expired. please login again.")
-          setTimeout(()=>{
-            localStorage.removeItem('authtoken');
-            localStorage.removeItem('userData');
-            localStorage.removeItem('refreshtoken');
-            localStorage.removeItem('isAuthentication');
-            window.location.href = '/login';
-          }, 2000);
-        }else {
-       setError(err.message || "Unable to update order. Please try again.");
-        }
+      setError(err.data?.message || err.message || "Unable to update order. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -192,9 +174,9 @@ const ChangeOrder = ({
   return (
     <div className="fixed inset-0 bg-white/20 backdrop-blur-lg bg-opacity-25 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
-        <Header 
-          onClose={onClose} 
-          table={table} 
+        <Header
+          onClose={onClose}
+          table={table}
           order={order}
           selectedWaiterId={selectedWaiterId}
           onWaiterChange={setSelectedWaiterId}

@@ -12,21 +12,17 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const createReservation = async (reservationData) => {
-  try {
-    const response = await api.post('reservations/create/reservation', {
-      customerName: reservationData.name,
-      customerPhone: reservationData.phone,
-      customerEmail: reservationData.email || undefined,
-      tableNumber: parseInt(reservationData.table),
-      reservationDate: reservationData.date,
-      reservationTime: reservationData.time,
-      numberOfGuests: parseInt(reservationData.partySize),
-      specialRequests: reservationData.notes || undefined
-    });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('reservations/create/reservation', {
+    customerName: reservationData.name,
+    customerPhone: reservationData.phone,
+    customerEmail: reservationData.email || undefined,
+    tableNumber: parseInt(reservationData.table),
+    reservationDate: reservationData.date,
+    reservationTime: reservationData.time,
+    numberOfGuests: parseInt(reservationData.partySize),
+    specialRequests: reservationData.notes || undefined
+  });
+  return response;
 };
 
 /**
@@ -35,14 +31,10 @@ export const createReservation = async (reservationData) => {
  * @returns {Promise} Response from backend
  */
 export const getReservations = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `reservations/get/reservation?${queryParams}` : 'reservations';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `reservations/get/reservation?${queryParams}` : 'reservations';
+  const response = await api.get(endpoint);
+  return response;
 };
 
 /**
@@ -51,12 +43,8 @@ export const getReservations = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const getReservationById = async (reservationId) => {
-  try {
-    const response = await api.get(`reservations/get/reservation/by/:id/${reservationId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`reservations/get/reservation/by/:id/${reservationId}`);
+  return response;
 };
 
 /**
@@ -66,12 +54,8 @@ export const getReservationById = async (reservationId) => {
  * @returns {Promise} Response from backend
  */
 export const updateReservation = async (reservationId, updateData) => {
-  try {
-    const response = await api.put(`reservations/update/reservation/by/:id/${reservationId}`, updateData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`reservations/update/reservation/by/:id/${reservationId}`, updateData);
+  return response;
 };
 
 /**
@@ -81,12 +65,8 @@ export const updateReservation = async (reservationId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const updateReservationStatus = async (reservationId, status) => {
-  try {
-    const response = await api.patch(`reservations/update/reservation/by/:id/status/${reservationId}/status`, { status });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.patch(`reservations/update/reservation/by/:id/status/${reservationId}/status`, { status });
+  return response;
 };
 
 /**
@@ -95,11 +75,6 @@ export const updateReservationStatus = async (reservationId, status) => {
  * @returns {Promise} Response from backend
  */
 export const deleteReservation = async (reservationId) => {
-  try {
-    const response = await api.delete(`reservations/delete/reservation/by/:id/${reservationId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.delete(`reservations/delete/reservation/by/:id/${reservationId}`);
+  return response;
 };
-

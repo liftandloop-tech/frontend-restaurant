@@ -10,7 +10,7 @@ import TableCard from "./TableCard";
  *   - onCompleteCleaning: callback for complete cleaning action
  *   - onSetTableTransfer: callback for setting table to transfer status
  */
-const AreaSection = ({ title, tables, location, onTransferTable, onCompleteCleaning, onSetTableTransfer, onTableClick, showServingInfo }) => {
+const AreaSection = ({ title, tables, location, onTransferTable, onCompleteCleaning, onSetTableTransfer, onUpdateStatus, onTableClick, showServingInfo }) => {
   return (
     <div className="py-1">
       <div className="text-[12px] text-gray-700 mb-2">{title}</div>
@@ -30,6 +30,7 @@ const AreaSection = ({ title, tables, location, onTransferTable, onCompleteClean
             onTransferTable={onTransferTable}
             onCompleteCleaning={onCompleteCleaning}
             onSetTableTransfer={onSetTableTransfer}
+            onUpdateStatus={onUpdateStatus}
             onTableClick={onTableClick}
             showServingInfo={showServingInfo}
           />

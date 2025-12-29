@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSearch, FiPrinter, FiRefreshCw, FiCheckCircle, FiClock, FiPlus, FiEdit } from "react-icons/fi";
 import { getKOTs, markKOTPrinted, updateKOTStatus } from "./utils/kots";
-import { getOrderById, getOrders, updateOrderStatus } from "./utils/orders";
+import { getOrderById, updateOrderStatus } from "./utils/orders";
 import TakeOrder from "./TakeOrder";
 import ChangeOrder from "./ChangeOrder";
 
@@ -18,7 +18,7 @@ const KOTManagement = () => {
   const [printedFilter, setPrintedFilter] = useState("all");
 
   // Modal states
-  const [isTakeOrderVisible, setIsTakeOrderVisible] = useState(false);
+  // const [isTakeOrderVisible, setIsTakeOrderVisible] = useState(false);
   const [isChangeOrderVisible, setIsChangeOrderVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);

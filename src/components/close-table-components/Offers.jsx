@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Offers = ({ onApplyDiscount }) => {
+const Offers = () => {
   // Offer/discount UI intentionally disabled per current requirements.
   // Keep the component to preserve layout and allow future enablement.
   // To re-enable, add inputs and call onApplyDiscount with the value.
@@ -15,9 +15,7 @@ const Offers = ({ onApplyDiscount }) => {
   );
 };
 
-Offers.propTypes = {
-  onApplyDiscount: PropTypes.func.isRequired,
-};
+Offers.propTypes = {};
 
 export default Offers;
 

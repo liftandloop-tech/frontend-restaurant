@@ -12,14 +12,10 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const getTables = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = queryParams ? `tables/get/table?${queryParams}` : 'tables/get/table';
-    const response = await api.get(endpoint);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `tables/get/table?${queryParams}` : 'tables/get/table';
+  const response = await api.get(endpoint);
+  return response;
 };
 
 /**
@@ -28,12 +24,8 @@ export const getTables = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const getTableById = async (tableId) => {
-  try {
-    const response = await api.get(`tables/get/table/by/${tableId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.get(`tables/get/table/by/${tableId}`);
+  return response;
 };
 
 /**
@@ -42,12 +34,8 @@ export const getTableById = async (tableId) => {
  * @returns {Promise} Response from backend
  */
 export const createTable = async (tableData) => {
-  try {
-    const response = await api.post('tables/create/tables', tableData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('tables/create/tables', tableData);
+  return response;
 };
 
 /**
@@ -57,12 +45,8 @@ export const createTable = async (tableData) => {
  * @returns {Promise} Response from backend
  */
 export const updateTable = async (tableId, updateData) => {
-  try {
-    const response = await api.put(`tables/update/table/by/${tableId}`, updateData);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.put(`tables/update/table/by/${tableId}`, updateData);
+  return response;
 };
 
 /**
@@ -72,12 +56,8 @@ export const updateTable = async (tableId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const updateTableStatus = async (tableId, status) => {
-  try {
-    const response = await api.patch(`tables/update/table/status/by/${tableId}/status`, { status });
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.patch(`tables/update/table/status/by/${tableId}/status`, { status });
+  return response;
 };
 
 /**
@@ -86,12 +66,8 @@ export const updateTableStatus = async (tableId, status) => {
  * @returns {Promise} Response from backend
  */
 export const transferTable = async (tableNumber) => {
-  try {
-    const response = await api.patch(`tables/transfer/table/${tableNumber}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.patch(`tables/transfer/table/${tableNumber}`);
+  return response;
 };
 
 /**
@@ -100,12 +76,8 @@ export const transferTable = async (tableNumber) => {
  * @returns {Promise} Response from backend
  */
 export const completeCleaning = async (tableNumber) => {
-  try {
-    const response = await api.patch(`tables/complete/cleaning/${tableNumber}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.patch(`tables/complete/cleaning/${tableNumber}`);
+  return response;
 };
 
 /**
@@ -114,12 +86,8 @@ export const completeCleaning = async (tableNumber) => {
  * @returns {Promise} Response from backend
  */
 export const deleteTable = async (tableId) => {
-  try {
-    const response = await api.delete(`tables/delete/table/by/${tableId}`);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.delete(`tables/delete/table/by/${tableId}`);
+  return response;
 };
 /**
  *set table to transfer status 
@@ -127,11 +95,6 @@ export const deleteTable = async (tableId) => {
  * @returns {Promise} Response from backend
  */
 export const setTableTransfer = async (tableNumber) => {
-try{
-  const Response = await api.patch(`tables/transfer/table${tableNumber}`,{status:'transfer'})
+  const Response = await api.patch(`tables/transfer/table${tableNumber}`, { status: 'transfer' })
   return Response
-
-}catch(error){
-  throw error
-}
 }

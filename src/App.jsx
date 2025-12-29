@@ -39,7 +39,7 @@ const ChangeOrder = React.lazy(() => import("./ChangeOrder"))
 const CloseTable = React.lazy(() => import("./CloseTable"))
 const OrderManagement = React.lazy(() => import("./OrderManagement"))
 const NewOrder = React.lazy(() => import("./NewOrder"))
-const OnlineOrder = React.lazy(() => import("./OnlineOrder"))
+//const OnlineOrder = React.lazy(() => import("./OnlineOrder"))
 const Reservations = React.lazy(() => import("./Reservations"))
 const AddReservation = React.lazy(() => import("./AddReservation"))
 const AllReservations = React.lazy(() => import("./AllReservations"))
@@ -57,7 +57,7 @@ const CustomerReport = React.lazy(() => import("./CustomerReport"))
 const KOTManagement = React.lazy(() => import("./KOTManagement"))
 const WaiterNotifications = React.lazy(() => import("./WaiterNotifications"))
 const PhoneOrder = React.lazy(() => import("./PhoneOrder"))
-const OnlineDeliveryOrder = React.lazy(() => import("./OnlineDeliveryOrder"))
+//const OnlineDeliveryOrder = React.lazy(() => import("./OnlineDeliveryOrder"))
 
 
 import Sidebar from "./components/Sidebar.jsx";
@@ -93,8 +93,7 @@ const App = () => {
   const [isChangeOrderVisible, setIsChangeOrderVisible] = useState(false);
   const [isPhoneOrderVisible, setIsPhoneOrderVisible] = useState(false);
   const [isOnlineDeliveryOrderVisible, setIsOnlineDeliveryOrderVisible] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [selectedTable, setSelectedTable] = useState(null);
+
 
   // Handlers are memoized with useCallback to prevent unnecessary re-renders of child components.
   const handleOpenTakeOrder = React.useCallback(
@@ -105,14 +104,7 @@ const App = () => {
     () => setIsTakeOrderVisible(false),
     []
   );
-  const handleOpenChangeOrder = React.useCallback(
-    (order, table) => {
-      setSelectedOrder(order);
-      setSelectedTable(table);
-      setIsChangeOrderVisible(true);
-    },
-    []
-  );
+  // handleOpenChangeOrder removed as it was unused
   const handleCloseChangeOrder = React.useCallback(
     () => setIsChangeOrderVisible(false),
     []
@@ -279,14 +271,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route
+              {/* <Route
                 path="/online-orders"
                 element={
                   <ProtectedRoute>
                     <OnlineOrder />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route
                 path="/reservations"
                 element={
@@ -466,8 +458,8 @@ const App = () => {
               <ChangeOrder
                 show={isChangeOrderVisible}
                 onClose={handleCloseChangeOrder}
-                order={selectedOrder}
-                table={selectedTable}
+                order={null}
+                table={null}
               />
             </Suspense>
           )}

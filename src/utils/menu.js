@@ -12,14 +12,10 @@ import api from './api.js';
  * @returns {Promise} Response from backend
  */
 export const getCategories = async (filters = {}) => {
-    try {
-        const queryParams = new URLSearchParams(filters).toString();
-        const endpoint = queryParams ? `menu/categories?${queryParams}` : 'menu/categories';
-        const response = await api.get(endpoint);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `menu/categories?${queryParams}` : 'menu/categories';
+    const response = await api.get(endpoint);
+    return response;
 };
 
 /**
@@ -28,12 +24,8 @@ export const getCategories = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const createCategory = async (categoryData) => {
-    try {
-        const response = await api.post('menu/categories', categoryData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.post('menu/categories', categoryData);
+    return response;
 };
 
 /**
@@ -43,12 +35,8 @@ export const createCategory = async (categoryData) => {
  * @returns {Promise} Response from backend
  */
 export const updateCategory = async (categoryId, updateData) => {
-    try {
-        const response = await api.put(`menu/categories/${categoryId}`, updateData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.put(`menu/categories/${categoryId}`, updateData);
+    return response;
 };
 
 /**
@@ -57,12 +45,8 @@ export const updateCategory = async (categoryId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const deleteCategory = async (categoryId) => {
-    try {
-        const response = await api.delete(`menu/categories/${categoryId}`);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.delete(`menu/categories/${categoryId}`);
+    return response;
 };
 
 /**
@@ -71,14 +55,10 @@ export const deleteCategory = async (categoryId) => {
  * @returns {Promise} Response from backend
  */
 export const getMenuItems = async (filters = {}) => {
-    try {
-        const queryParams = new URLSearchParams(filters).toString();
-        const endpoint = queryParams ? `menu/items?${queryParams}` : 'menu/items';
-        const response = await api.get(endpoint);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `menu/items?${queryParams}` : 'menu/items';
+    const response = await api.get(endpoint);
+    return response;
 };
 
 /**
@@ -87,12 +67,8 @@ export const getMenuItems = async (filters = {}) => {
  * @returns {Promise} Response from backend
  */
 export const createMenuItem = async (itemData) => {
-    try {
-        const response = await api.post('menu/items', itemData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.post('menu/items', itemData);
+    return response;
 };
 
 /**
@@ -102,12 +78,8 @@ export const createMenuItem = async (itemData) => {
  * @returns {Promise} Response from backend
  */
 export const updateMenuItem = async (itemId, updateData) => {
-    try {
-        const response = await api.put(`menu/items/${itemId}`, updateData);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.put(`menu/items/${itemId}`, updateData);
+    return response;
 };
 
 /**
@@ -116,10 +88,6 @@ export const updateMenuItem = async (itemId, updateData) => {
  * @returns {Promise} Response from backend
  */
 export const deleteMenuItem = async (itemId) => {
-    try {
-        const response = await api.delete(`menu/items/${itemId}`);
-        return response;
-    } catch (error) {
-        throw error;
-    }
+    const response = await api.delete(`menu/items/${itemId}`);
+    return response;
 };
