@@ -96,10 +96,10 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                 <td className="px-6 py-4">
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide ${item.status === "In Stock"
-                        ? "bg-green-100 text-green-800"
-                        : item.status === "Low Stock"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : item.status === "Low Stock"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
                       }`}
                   >
                     {item.status}
@@ -109,7 +109,7 @@ const StockOverviewTable = ({ data, onItemSelect, selectedItem, onEdit, onDelete
                 {/* Actions Column */}
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
-                    {(userRole === 'Owner' || userRole === 'Manager') && (
+                    {(userRole === 'Owner' || userRole === 'Manager' || userRole === 'Admin') && (
                       <>
                         <button
                           onClick={(e) => {

@@ -2,29 +2,39 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getActiveWaiters } from "../../utils/staff";
 import { getCustomers } from "../../utils/customers";
+import { getTables } from "../../utils/tables";
 
 const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
   const [waiters, setWaiters] = useState([]);
+  const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
 
   useEffect(() => {
-    const loadWaiters = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const response = await getActiveWaiters();
-        if (response?.success && response?.data) {
-          setWaiters(Array.isArray(response.data) ? response.data : []);
+        const [waitersRes, tablesRes] = await Promise.all([
+          getActiveWaiters(),
+          getTables()
+        ]);
+
+        if (waitersRes?.success && waitersRes?.data) {
+          setWaiters(Array.isArray(waitersRes.data) ? waitersRes.data : []);
+        }
+
+        if (tablesRes?.success && tablesRes?.data) {
+          setTables(Array.isArray(tablesRes.data) ? tablesRes.data : []);
         }
       } catch (err) {
-        console.error("Error loading waiters:", err);
+        console.error("Error loading initial data:", err);
       } finally {
         setLoading(false);
       }
     };
-    loadWaiters();
+    loadData();
   }, []);
 
   const searchCustomers = async (searchValue) => {
@@ -192,15 +202,25 @@ const OrderInfo = ({ orderInfo, setOrderInfo, orderType = "takeaway" }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Table Number <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              placeholder="Enter table number"
-              min="1"
+            <select
               value={orderInfo.tableNumber || ""}
-              onChange={(e) => handleChange("tableNumber", parseInt(e.target.value) || "")}
+              onChange={(e) => handleChange("tableNumber", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
-            />
+              disabled={loading}
+            >
+              <option value="">Select Table</option>
+              {tables.map((table) => (
+                <option key={table._id || table.id} value={table.tableNumber}>
+                  Table {table.tableNumber} ({table.capacity} seats)
+                </option>
+              ))}
+            </select>
+            {tables.length === 0 && !loading && (
+              <p className="mt-1 text-xs text-red-500">
+                No tables found. Please add tables first.
+              </p>
+            )}
           </div>
         )}
       </div>

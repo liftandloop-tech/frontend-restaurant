@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import {
   CustomerManagement,
-  CustomerSegments,
+  //CustomerSegments,
 } from "./components/customer-dashboard-components";
 import AddCustomer from "./AddCustomer";
 import {
@@ -213,8 +213,8 @@ const CustomerReport = () => {
           loading={customersLoading}
         />
 
-        {/* Customer Segments Section */}
-        <CustomerSegments segments={segments} />
+        {/* Customer Segments Section
+        <CustomerSegments segments={segments} /> */}
 
         {/* AddCustomer Modal */}
         <AddCustomer

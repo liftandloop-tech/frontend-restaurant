@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Header,
@@ -9,6 +9,7 @@ import {
 } from "./components/staff-management-components";
 import AddStaff from "./AddStaff";
 import { useRegisterStaffMutation, useUpdateStaffMutation } from "./features/staff/staffApiSlice";
+import { fetchCurrentUserProfile } from "./utils/auth";
 
 /**
  * Main Staff Management component
@@ -51,9 +52,66 @@ const StaffManagement = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // Check and recover user context on mount
+  useEffect(() => {
+    const checkContext = async () => {
+      const userDataStr = localStorage.getItem('userData');
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          if (!userData.restaurantId) {
+            console.log("Restaurant ID missing in storage, fetching profile...");
+            await fetchCurrentUserProfile();
+          }
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
+      } else {
+        // No user data? Try to fetch it.
+        await fetchCurrentUserProfile();
+      }
+    };
+    checkContext();
+  }, []);
+
   // Handle staff submission from AddStaff modal
   const handleStaffSubmit = async (staffData) => {  //new
     try {
+      // Get user data from localStorage to get restaurantId
+      const userDataStr = localStorage.getItem('userData');
+      let restaurantId = null;
+      let createdBy = null;
+
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          restaurantId = userData.restaurantId;
+          createdBy = userData._id;
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
+      }
+
+      if (!restaurantId) {
+        // Prepare recovery attempt
+        console.log("Restaurant ID missing, attempting recovery...");
+        try {
+          const updatedProfile = await fetchCurrentUserProfile();
+          if (updatedProfile && updatedProfile.restaurantId) {
+            restaurantId = updatedProfile.restaurantId;
+            createdBy = updatedProfile._id || updatedProfile.id;
+            console.log("Context recovered successfully");
+          }
+        } catch (err) {
+          console.error("Failed to recover profile context:", err);
+        }
+      }
+
+      if (!restaurantId) {
+        alert("Session Context Error: Could not determine restaurant details. Please log out and log back in to refresh your session.");
+        return;
+      }
+
       // Prepare the staff data for API submission
       const apiData = {
         fullName: staffData.fullName,
@@ -69,14 +127,16 @@ const StaffManagement = () => {
         supervisor: staffData.supervisor && staffData.supervisor !== '' ? staffData.supervisor : null,
         shiftStart: staffData.shiftStart || null,
         shiftEnd: staffData.shiftEnd || null,
-        autoAddToAttendance: staffData.autoAddToAttendance,
-        baseSalary: staffData.baseSalary ? parseFloat(staffData.baseSalary) : 0,
+        autoAddToAttendance: staffData.autoAddToAttendance || false,
+        baseSalary: staffData.baseSalary !== "" && staffData.baseSalary !== null && staffData.baseSalary !== undefined ? parseFloat(staffData.baseSalary) : 0,
         paymentMode: staffData.paymentMode || 'Bank Transfer',
-        tipCommissionEligible: staffData.tipCommissionEligible,
+        tipCommissionEligible: staffData.tipCommissionEligible || false,
         bankName: staffData.bankName || null,
         ifscCode: staffData.ifscCode || null,
         accountNumber: staffData.accountNumber || null,
         internalNotes: staffData.internalNotes || null,
+        restaurantId: restaurantId,
+        createdBy: createdBy
       };
 
       // Check if we are updating or creating
@@ -99,7 +159,15 @@ const StaffManagement = () => {
 
     } catch (error) {
       console.error("Error saving staff member:", error);
-      alert(`Failed to save staff member: ${error.data?.message || error.message}`);
+      let errorMessage = error.data?.message || error.message || "Unknown error";
+
+      // Append detailed validation errors if available
+      if (error.data?.errors && Array.isArray(error.data.errors)) {
+        const details = error.data.errors.map(err => `${err.field}: ${err.message}`).join('\n');
+        errorMessage += `\n\nDetails:\n${details}`;
+      }
+
+      alert(`Failed to save staff member: ${errorMessage}`);
     }
   };//new end
 

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "./utils/api";
+import { fetchCurrentUserProfile } from "./utils/auth";
+import { useUpdateProfileMutation, useChangePasswordMutation } from "./features/users/usersApiSlice";
 import {
   AlertBanner,
   BusinessProfileHeader,
@@ -23,150 +26,138 @@ const Profile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data from localStorage or use defaults
-  const loadDataFromStorage = useCallback(() => {
-    const storedOwner = localStorage.getItem("profileOwnerData");
-    const storedBusiness = localStorage.getItem("profileBusinessData");
-    const storedLicense = localStorage.getItem("profileLicenseData");
-    const storedAccount = localStorage.getItem("profileAccountData");
-    const storedActivities = localStorage.getItem("profileActivities");
-
-    return {
-      owner: storedOwner ? JSON.parse(storedOwner) : getDefaultOwnerData(),
-      business: storedBusiness
-        ? JSON.parse(storedBusiness)
-        : getDefaultBusinessData(),
-      license: storedLicense
-        ? JSON.parse(storedLicense)
-        : getDefaultLicenseData(),
-      account: storedAccount
-        ? JSON.parse(storedAccount)
-        : getDefaultAccountData(),
-      activities: storedActivities
-        ? JSON.parse(storedActivities)
-        : getDefaultActivities(),
-    };
-  }, []);
-
+  // Default Data Generators
   const getDefaultOwnerData = () => ({
-    name: "Ishan Bhagat",
-    role: "Business Owner",
-    joinedOn: "12 Jan 2024",
+    name: "Loading...",
+    role: "Loading...",
+    joinedOn: "...",
     status: "Active",
     profilePicture: "https://i.pravatar.cc/150?img=12",
     gender: "Male",
-    contact: "+91 98765 43210",
-    email: "ishan@example.com",
-    address: "201, Royal Enclave, Indore, MP 452001",
-    city: "Indore",
-    dateOfBirth: "12 May 1996",
-    alternate: "+91 98765 67890",
-    state: "Madhya Pradesh",
+    contact: "...",
+    email: "...",
+    address: "...",
+    city: "...",
+    dateOfBirth: "...",
+    alternate: "...",
+    state: "...",
   });
 
   const getDefaultBusinessData = () => ({
-    businessName: "Rayonner Salon",
-    gstRegNo: "23AABCR2321K1Z",
-    workingHours: "10:00 AM - 9:00 PM",
-    manager: "Neha Sharma",
-    businessType: "Salon",
-    businessEmail: "contact@rayonner.com",
-    weeklyOff: "Monday",
-    branchCount: "3 Active Locations",
-    businessPhone: "+91 91234 56789",
-    dailyOrders: "50+",
+    businessName: "Loading...",
+    gstRegNo: "...",
+    workingHours: "...",
+    manager: "...",
+    businessType: "Restaurant",
+    businessEmail: "...",
+    weeklyOff: "...",
+    branchCount: "...",
+    businessPhone: "...",
+    dailyOrders: "...",
   });
 
   const getDefaultLicenseData = () => ({
-    licenseKey: "QXP-2025-RST-4ZL2",
-    plan: "Premium Annual Plan",
-    status: "Expiring Soon",
+    licenseKey: "...",
+    plan: "Standard Plan",
+    status: "Active",
     renewalType: "Annual",
     autoRenew: "Enabled",
-    expiryDate: "31 Dec 2025",
-    module: "Salon POS",
-    paymentMode: "Card ending 8732",
-    lastRenewed: "01 Jan 2025",
+    expiryDate: "...",
+    module: "POS",
+    paymentMode: "...",
+    lastRenewed: "...",
   });
 
   const getDefaultAccountData = () => ({
-    userId: "ishan.owner@quickxpos.com",
-    passwordLastUpdated: "08 Oct 2025",
+    userId: "...",
+    passwordLastUpdated: "...",
   });
 
-  const getDefaultActivities = () => [
-    {
-      date: "09 Oct 2025",
-      activity: "Renewed License",
-      module: "License",
-      moduleColor: "bg-purple-100 text-purple-800",
-    },
-    {
-      date: "08 Oct 2025",
-      activity: "Added Staff Member",
-      module: "Staff",
-      moduleColor: "bg-green-100 text-green-800",
-    },
-    {
-      date: "07 Oct 2025",
-      activity: "Updated Plan",
-      module: "Billing",
-      moduleColor: "bg-pink-100 text-pink-800",
-    },
-    {
-      date: "06 Oct 2025",
-      activity: "Created Offer",
-      module: "Promotions",
-      moduleColor: "bg-orange-100 text-orange-800",
-    },
-    {
-      date: "05 Oct 2025",
-      activity: "Added Vendor",
-      module: "Inventory",
-      moduleColor: "bg-indigo-100 text-indigo-800",
-    },
-    {
-      date: "04 Oct 2025",
-      activity: "Changed Password",
-      module: "Security",
-      moduleColor: "bg-red-100 text-red-800",
-    },
-  ];
+  const getDefaultActivities = () => [];
 
-  const [profileData, setProfileData] = useState(loadDataFromStorage());
+  const [profileData, setProfileData] = useState({
+    owner: getDefaultOwnerData(),
+    business: getDefaultBusinessData(),
+    license: getDefaultLicenseData(),
+    account: getDefaultAccountData(),
+    activities: getDefaultActivities(),
+  });
 
-  // Load data on mount
+  // Fetch real data on mount
   useEffect(() => {
-    const data = loadDataFromStorage();
-    setProfileData(data);
-  }, [loadDataFromStorage]);
+    const fetchProfileData = async () => {
+      try {
+        setIsLoading(true);
+        // 1. Fetch User Profile
+        const userProfile = await fetchCurrentUserProfile();
 
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    if (profileData) {
-      localStorage.setItem(
-        "profileOwnerData",
-        JSON.stringify(profileData.owner)
-      );
-      localStorage.setItem(
-        "profileBusinessData",
-        JSON.stringify(profileData.business)
-      );
-      localStorage.setItem(
-        "profileLicenseData",
-        JSON.stringify(profileData.license)
-      );
-      localStorage.setItem(
-        "profileAccountData",
-        JSON.stringify(profileData.account)
-      );
-      localStorage.setItem(
-        "profileActivities",
-        JSON.stringify(profileData.activities)
-      );
-    }
-  }, [profileData]);
+        // 2. Fetch Restaurant Details
+        let restaurantData = null;
+        try {
+          const restaurantRes = await api.get('restaurants/my-restaurant');
+          if (restaurantRes.success) {
+            restaurantData = restaurantRes.data;
+          }
+        } catch (err) {
+          console.warn("Could not fetch restaurant data", err);
+        }
+
+        // Map to state
+        if (userProfile) {
+          setProfileData(prev => ({
+            ...prev,
+            owner: {
+              ...prev.owner,
+              name: userProfile.fullName || userProfile.name || "N/A",
+              email: userProfile.email || "N/A",
+              role: userProfile.role || "N/A",
+              contact: userProfile.mobile || "N/A",
+              joinedOn: userProfile.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : "N/A",
+            },
+            account: {
+              ...(prev.account || {}),
+              userId: userProfile.email,
+              passwordLastUpdated: "N/A"
+            }
+          }));
+        }
+
+        if (restaurantData) {
+          setProfileData(prev => ({
+            ...prev,
+            business: {
+              businessName: restaurantData.name || "N/A",
+              gstRegNo: restaurantData.licenseKey || "N/A",
+              workingHours: "10:00 AM - 10:00 PM",
+              businessEmail: restaurantData.email || "N/A",
+              businessPhone: restaurantData.phone || "N/A",
+              city: restaurantData.address?.city || "N/A",
+              businessType: "Restaurant",
+              branchCount: "1",
+              manager: "N/A"
+            },
+            license: {
+              ...(prev.license || {}),
+              licenseKey: restaurantData.licenseKey || "N/A",
+              status: restaurantData.isActive ? "Active" : "Inactive"
+            }
+          }));
+        }
+
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  const [updateProfileApi] = useUpdateProfileMutation();
+  const [changePasswordApi] = useChangePasswordMutation();
 
   // Event handlers
   const handleEditInfo = () => {
@@ -177,45 +168,63 @@ const Profile = () => {
     setIsPasswordModalOpen(true);
   };
 
-  const handleSaveProfile = (formData) => {
-    setProfileData((prev) => ({
-      ...prev,
-      owner: formData.owner,
-      business: formData.business,
-    }));
-    setHasChanges(true);
-    addActivity("Updated Profile Information", "Security");
-    showNotification("Profile information updated successfully!", "success");
+  const handleSaveProfile = async (formData) => {
+    try {
+      // Prepare user update data
+      const userUpdateData = {
+        name: formData.owner.name,
+        email: formData.owner.email,
+        mobile: formData.owner.contact
+      };
+
+      // Call API to update user profile
+      await updateProfileApi(userUpdateData).unwrap();
+
+      // Update local state
+      setProfileData((prev) => ({
+        ...prev,
+        owner: formData.owner,
+        business: formData.business,
+      }));
+      setHasChanges(false);
+      addActivity("Updated Profile Information", "Security");
+      showNotification("Profile information updated successfully!", "success");
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      showNotification(error?.data?.message || "Failed to update profile", "error");
+    }
   };
 
-  const handleSavePassword = (/* passwordData */) => {
-    // Update password last updated date
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const handleSavePassword = async (passwordData) => {
+    try {
+      await changePasswordApi(passwordData).unwrap();
 
-    setProfileData((prev) => ({
-      ...prev,
-      account: {
-        ...prev.account,
-        passwordLastUpdated: formattedDate,
-      },
-    }));
-    addActivity("Changed Password", "Security");
-    showNotification("Password changed successfully!", "success");
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+      setProfileData((prev) => ({
+        ...prev,
+        account: {
+          ...prev.account,
+          passwordLastUpdated: formattedDate,
+        },
+      }));
+      addActivity("Changed Password", "Security");
+      showNotification("Password changed successfully!", "success");
+      setIsPasswordModalOpen(false);
+    } catch (error) {
+      console.error("Failed to change password:", error);
+      showNotification(error?.data?.message || "Failed to change password", "error");
+    }
   };
 
   const handleManageBranches = () => {
-    // Navigate to branches management page (if exists) or show alert
-    const hasBranchesPage = false; // Set to true if you have a branches page
-    if (hasBranchesPage) {
-      navigate("/branches");
-    } else {
-      showNotification("Branches management feature coming soon!", "info");
-    }
+    showNotification("Branches management feature coming soon!", "info");
   };
 
   const handleCopyKey = () => {
@@ -224,12 +233,10 @@ const Profile = () => {
   };
 
   const handleRenewLicense = () => {
-    // Simulate license renewal
     const confirmRenew = window.confirm(
       "Are you sure you want to renew your license? This will process a payment."
     );
     if (confirmRenew) {
-      // Update license expiry date
       const newExpiryDate = new Date();
       newExpiryDate.setFullYear(newExpiryDate.getFullYear() + 1);
       const formattedDate = newExpiryDate.toLocaleDateString("en-GB", {
@@ -261,21 +268,12 @@ const Profile = () => {
   };
 
   const handleViewAllLogs = () => {
-    // Navigate to full activity logs page (if exists) or show alert
-    const hasLogsPage = false; // Set to true if you have a logs page
-    if (hasLogsPage) {
-      navigate("/activity-logs");
-    } else {
-      showNotification("Full activity logs feature coming soon!", "info");
-    }
+    showNotification("Full activity logs feature coming soon!", "info");
   };
 
   const handleCancel = () => {
     if (hasChanges) {
-      const confirmCancel = window.confirm(
-        "You have unsaved changes. Are you sure you want to cancel?"
-      );
-      if (!confirmCancel) return;
+      if (!window.confirm("You have unsaved changes. Are you sure you want to cancel?")) return;
     }
     navigate(-1);
   };
@@ -283,10 +281,7 @@ const Profile = () => {
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Save all changes to localStorage (already done in useEffect)
       setHasChanges(false);
       showNotification("All changes saved successfully!", "success");
     } catch (error) {
@@ -323,12 +318,11 @@ const Profile = () => {
 
     setProfileData((prev) => ({
       ...prev,
-      activities: [newActivity, ...prev.activities.slice(0, 9)], // Keep last 10 activities
+      activities: [newActivity, ...prev.activities.slice(0, 9)],
     }));
   };
 
   const showNotification = (message, type = "success") => {
-    // Create a simple notification
     const notification = document.createElement("div");
     notification.className = `fixed top-20 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${type === "success"
       ? "bg-green-500 text-white"
@@ -351,25 +345,20 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#F7F8FA] pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Alert Banner */}
         <AlertBanner daysRemaining={5} />
 
-        {/* Business Profile Header */}
         <BusinessProfileHeader
           onEditInfo={handleEditInfo}
           onChangePassword={handleChangePassword}
         />
 
-        {/* Owner Information */}
         <OwnerInformation ownerData={profileData.owner} />
 
-        {/* Business Information */}
         <BusinessInformation
           businessData={profileData.business}
           onManageBranches={handleManageBranches}
         />
 
-        {/* License & Subscription Information */}
         <LicenseSubscription
           licenseData={profileData.license}
           onCopyKey={handleCopyKey}
@@ -377,19 +366,16 @@ const Profile = () => {
           onUpgradePlan={handleUpgradePlan}
         />
 
-        {/* Account & Security */}
         <AccountSecurity
           accountData={profileData.account}
           onChangePassword={handleChangePassword}
         />
 
-        {/* Recent Activity Log */}
         <RecentActivityLog
           activities={profileData.activities}
           onViewAllLogs={handleViewAllLogs}
         />
 
-        {/* Action Buttons */}
         <ActionButtons
           onCancel={handleCancel}
           onSaveChanges={handleSaveChanges}
@@ -397,7 +383,6 @@ const Profile = () => {
         />
       </div>
 
-      {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -406,7 +391,6 @@ const Profile = () => {
         onSave={handleSaveProfile}
       />
 
-      {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}

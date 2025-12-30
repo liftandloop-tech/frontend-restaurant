@@ -141,10 +141,26 @@ const AddStaff = ({ isOpen, onClose, onSubmit, initialData }) => {
     }
 
     // Validate phone number format (basic validation)
-    const phoneRegex = /^[+]?[1-9]\d{0,15}$/;
-    if (!phoneRegex.test(formData.phoneNumber.replace(/\D/g, ""))) {
-      alert("Please enter a valid phone number");
+    const phoneDigits = formData.phoneNumber.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      alert("Phone number must be between 10 and 15 digits");
       return;
+    }
+
+    // Validate username length
+    if (formData.username.length < 3) {
+      alert("Username must be at least 3 characters long");
+      return;
+    }
+
+    // Validate password for new staff (if no initialData)
+    // For updates, password might be empty if unchanged, handled by parent/backend
+    if (!initialData) {
+      const pwd = formData.temporaryPassword || formData.password;
+      if (!pwd || pwd.length < 6) {
+        alert("Password is required and must be at least 6 characters long");
+        return;
+      }
     }
 
     // Validate email format if provided
