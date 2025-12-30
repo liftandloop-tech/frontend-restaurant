@@ -37,7 +37,7 @@ const Dashboard = ({ onTakeOrder }) => {
             <RecentOrders orders={recentOrders} loading={loading} />
           </div>
           <div className="col-span-1 h-full">
-            {/* Optional side panel */}
+            Optional side panel
           </div>
         </div>{" "}
         <div className="flex items-center flex-col h-fit mt-[40px]">
