@@ -17,10 +17,15 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 body: data,
             }),
         }),
+        getProfile: builder.query({
+            query: () => 'users/user/profile',
+            providesTags: ['User'],
+        }),
     }),
 });
 
 export const {
     useUpdateProfileMutation,
     useChangePasswordMutation,
+    useGetProfileQuery,
 } = usersApiSlice;

@@ -285,7 +285,7 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
               <div className="flex items-center gap-2">
                 {/* New Order Button */}
                 <button
-                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm h-[40px] w-[100px]"
                   onClick={() => navigate("/new-order")}
                 >
                   <FiPlus className="w-4 h-4" />
@@ -294,7 +294,7 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
 
                 {/* Phone Order Button */}
                 <button
-                  className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition-colors text-sm h-[40px] w-[100px]"
                   onClick={onOpenPhoneOrder}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

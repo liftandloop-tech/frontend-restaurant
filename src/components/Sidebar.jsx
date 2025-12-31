@@ -21,15 +21,25 @@ import { MdOutlineTableBar } from "react-icons/md";
 import { FiBarChart } from "react-icons/fi";
 import "./Sidebar.css";
 
+import { useGetProfileQuery } from "../features/users/usersApiSlice";
+import { FiUser } from "react-icons/fi";
+
 const Sidebar = ({ onLogout, onCollapse }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
     const navigate = useNavigate();
+
+    // Fetch user profile from backend
+    const { data: userProfile, refetch: refetchProfile } = useGetProfileQuery();
+    const userData = userProfile?.data || { name: "User", role: "Staff" };
 
     const toggleCollapse = () => {
         const newState = !isCollapsed;
         setIsCollapsed(newState);
         if (onCollapse) onCollapse(newState);
+    };
+
+    const handleProfileClick = () => {
+        navigate('/profile');
     };
 
     const menuItems = [
@@ -47,22 +57,13 @@ const Sidebar = ({ onLogout, onCollapse }) => {
         //  { path: "/settings", icon: <LuSettings />, label: "Settings" },
     ];
 
-    const userData = (() => {
-        try {
-            const data = localStorage.getItem("userData");
-            return data ? JSON.parse(data) : { name: "Admin", role: "Manager" };
-        } catch {
-            return { name: "Admin", role: "Manager" };
-        }
-    })();
-
     const handleLogoutClick = () => {
         if (onLogout) onLogout();
         navigate("/login");
     };
 
     return (
-        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""} overflow-auto`}>
+        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""} overflow-visible relative`}>
             {/* Logo Section */}
             <div className="sidebar-header">
                 <div className="logo-container">
@@ -103,15 +104,19 @@ const Sidebar = ({ onLogout, onCollapse }) => {
             </nav>
 
             {/* User & Footer Section */}
-            <div className="sidebar-footer">
-                <div className="user-profile" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-                    <div className="user-avatar">
+            <div className="sidebar-footer relative">
+
+                <div
+                    className="user-profile cursor-pointer hover:bg-gray-800/50 transition-colors p-2 rounded-lg"
+                    onClick={handleProfileClick}
+                >
+                    <div className="user-avatar bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
                         <LuUser />
                     </div>
                     {!isCollapsed && (
                         <div className="user-info">
-                            <span className="user-name">{userData.name || "Admin"}</span>
-                            <span className="user-role">{userData.role || "Manager"}</span>
+                            <span className="user-name font-semibold">{userData.name}</span>
+                            <span className="user-role text-xs opacity-70">{userData.role}</span>
                         </div>
                     )}
                 </div>
