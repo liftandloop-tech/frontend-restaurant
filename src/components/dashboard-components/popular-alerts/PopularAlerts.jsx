@@ -1,8 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-
-
 const AlertRow = ({ bg, icon, title, subtitle }) => (
   <div className={`rounded-lg px-4 py-3 ${bg}`}>
     <div className="flex items-center gap-3">
@@ -62,7 +60,7 @@ const PopularAlerts = ({ summary }) => {
   if (alerts.length < 3) {
     alerts.push({
       bg: "bg-blue-50",
-      icon: <span className="text-blue-600 text-[14px]">�</span>,
+      icon: <span className="text-blue-600 text-[14px]">📊</span>,
       title: "Today's Performance",
       subtitle: `Revenue: ₹${summary?.revenue || 0} from ${summary?.bills || 0} bills.`
     });
