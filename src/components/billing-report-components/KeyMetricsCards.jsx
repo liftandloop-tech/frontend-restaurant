@@ -1,21 +1,19 @@
 import React, { useMemo } from "react";
-import { useGetTodaySummaryQuery } from "../../features/dashboard/dashboardApiSlice";
+
 
 /**
  * KeyMetricsCards component displays four key billing metrics
  */
-const KeyMetricsCards = () => {
-  const { data: summaryResponse, isLoading } = useGetTodaySummaryQuery();
+const KeyMetricsCards = ({ data }) => {
+  const metricsData = data?.metrics || {};
 
   const metrics = useMemo(() => {
-    const data = summaryResponse?.data || {};
-
     return [
       {
         id: 1,
         title: "Total Bills Generated",
-        value: data.totalBills || "0",
-        subtitle: `Average ${Math.round((data.totalBills || 0) / 30)} bills/day`,
+        value: (metricsData.totalOrders || 0).toLocaleString(), // Assuming orders = bills roughly
+        subtitle: `Period Total`,
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -23,16 +21,16 @@ const KeyMetricsCards = () => {
         ),
         bgColor: "bg-blue-500",
         trend: {
-          value: `${data.trends?.bills || 0}%`,
-          direction: (data.trends?.bills || 0) >= 0 ? "up" : "down",
-          color: (data.trends?.bills || 0) >= 0 ? "text-green-600" : "text-red-600",
+          value: "0%", // Backend data pending for trend
+          direction: "neutral",
+          color: "text-gray-600",
         },
       },
       {
         id: 2,
         title: "Total Revenue",
-        value: `₹ ${(data.revenue || 0).toLocaleString()}`,
-        subtitle: "Net sales after tax adjustments",
+        value: `₹ ${(metricsData.totalRevenue || 0).toLocaleString()}`,
+        subtitle: "Net sales",
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -40,15 +38,15 @@ const KeyMetricsCards = () => {
         ),
         bgColor: "bg-green-500",
         trend: {
-          value: `${data.trends?.revenue || 0}%`,
-          direction: (data.trends?.revenue || 0) >= 0 ? "up" : "down",
-          color: (data.trends?.revenue || 0) >= 0 ? "text-green-600" : "text-red-600",
+          value: "0%",
+          direction: "neutral",
+          color: "text-gray-600",
         },
       },
       {
         id: 3,
         title: "Average Bill Value",
-        value: `₹ ${(data.averageOrderValue || 0).toLocaleString()}`,
+        value: `₹ ${(metricsData.averageOrderValue || 0).toLocaleString()}`,
         subtitle: "Average revenue per order",
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,16 +55,16 @@ const KeyMetricsCards = () => {
         ),
         bgColor: "bg-purple-500",
         trend: {
-          value: `${data.trends?.averageOrderValue || 0}%`,
-          direction: (data.trends?.averageOrderValue || 0) >= 0 ? "up" : "down",
-          color: (data.trends?.averageOrderValue || 0) >= 0 ? "text-green-600" : "text-red-600",
+          value: "0%",
+          direction: "neutral",
+          color: "text-gray-600",
         },
       },
       {
         id: 4,
-        title: "Pending Payments",
-        value: `₹ ${(data.pendingRevenue || 0).toLocaleString()}`,
-        subtitle: `To be settled across ${data.pendingOrders || 0} open bills.`,
+        title: "Completed Orders",
+        value: (metricsData.completedOrders || 0).toLocaleString(),
+        subtitle: "Paid and settled",
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -74,15 +72,13 @@ const KeyMetricsCards = () => {
         ),
         bgColor: "bg-orange-500",
         trend: {
-          value: `${data.trends?.pendingRevenue || 0}%`,
-          direction: (data.trends?.pendingRevenue || 0) >= 0 ? "up" : "down",
-          color: (data.trends?.pendingRevenue || 0) >= 0 ? "text-red-600" : "text-green-600",
+          value: "0%",
+          direction: "neutral",
+          color: "text-gray-600",
         },
       },
     ];
-  }, [summaryResponse]);
-
-  if (isLoading) return <div className="grid grid-cols-4 gap-6 mb-8">{[1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>)}</div>;
+  }, [metricsData]);
 
   return (
     <div className="mb-8">

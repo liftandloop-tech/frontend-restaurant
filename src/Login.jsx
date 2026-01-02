@@ -6,11 +6,11 @@ import { login } from "./utils/auth";
 const Login = ({ onLogin }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Get registration data from navigation state
   const registeredEmail = location.state?.registeredEmail || "";
   const successMessage = location.state?.message || "";
-  
+
   const [formData, setFormData] = useState({
     email: registeredEmail,
     password: "",
@@ -20,7 +20,7 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMsg, setSuccessMsg] = useState(successMessage);
-  
+
   // Clear success message after 5 seconds
   useEffect(() => {
     if (successMsg) {
@@ -65,17 +65,17 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
-    
+
     try {
       // Call backend API to login
       const response = await login(formData.email, formData.password);
-      
+
       if (response.success) {
         // Notify parent component first (this updates React state)
         if (onLogin) {
@@ -125,11 +125,10 @@ const Login = ({ onLogin }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.email
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -156,11 +155,10 @@ const Login = ({ onLogin }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.password
+                  className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password
                       ? "border-red-300 bg-red-50"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -211,12 +209,12 @@ const Login = ({ onLogin }) => {
                 </label>
               </div>
               <div className="text-sm">
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
 

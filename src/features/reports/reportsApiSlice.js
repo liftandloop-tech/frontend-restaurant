@@ -9,6 +9,13 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
                 responseHandler: (response) => response.blob(),
             }),
         }),
+        getDashboardStats: builder.query({
+            query: (params) => ({
+                url: 'report/dashboard-stats',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
         getScheduledReports: builder.query({
             query: () => 'report/schedule',
             providesTags: ['Report'],
@@ -42,6 +49,7 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
 export const {
     useExportPDFQuery,
     useLazyExportPDFQuery,
+    useGetDashboardStatsQuery,
     useGetScheduledReportsQuery,
     useCreateScheduledReportMutation,
     useUpdateScheduledReportMutation,

@@ -26,7 +26,30 @@ import {
  * The dashboard is fully responsive and uses Tailwind CSS for styling.
  * All components are modular and reusable with proper prop handling.
  */
+import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
+import { useGetBillsQuery } from "./features/bills/billsApiSlice";
+
 const BillingReport = () => {
+  // Fetch stats (reusing dashboard stats for summary)
+  const { data: statsResponse, isLoading: statsLoading } = useGetDashboardStatsQuery({
+    reportType: 'billing',
+    dateRange: 'This Month'
+  });
+
+  // Fetch recent bills
+  const { data: billsResponse, isLoading: billsLoading } = useGetBillsQuery({ limit: 10 });
+
+  const statsData = statsResponse?.success ? statsResponse.data : null;
+  const billsData = billsResponse?.success ? billsResponse.data : [];
+
+  if (statsLoading || billsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Container */}
@@ -35,19 +58,19 @@ const BillingReport = () => {
         <Header />
 
         {/* Key Metrics Cards */}
-        <KeyMetricsCards />
+        <KeyMetricsCards data={statsData} />
 
         {/* Revenue Charts Section */}
-        <RevenueCharts />
+        <RevenueCharts data={statsData} />
 
         {/* Recent Bills Section */}
-        <RecentBills />
+        <RecentBills bills={billsData} />
 
         {/* Revenue Insights Section */}
-        <RevenueInsights />
+        <RevenueInsights data={statsData} />
 
         {/* Expense vs Profit Section */}
-        <ExpenseProfit />
+        <ExpenseProfit data={statsData} />
 
         {/* Reminders Section */}
         <Reminders />

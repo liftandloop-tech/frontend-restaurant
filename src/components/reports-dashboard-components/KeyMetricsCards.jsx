@@ -4,13 +4,15 @@ import React from "react";
  * KeyMetricsCards component displays the main performance metrics
  * Shows Total Revenue, Total Orders, Total Customers, and Active Offers
  */
-const KeyMetricsCards = () => {
+const KeyMetricsCards = ({ data }) => {
+  const metricsData = data?.metrics || {};
+
   const metrics = [
     {
       id: 1,
       title: "Total Revenue",
-      value: "₹2,45,000",
-      change: "+5%",
+      value: `₹${(metricsData.totalRevenue || 0).toLocaleString()}`,
+      change: "+5%", // Backend doesn't provide change % yet, keep static or calc if possible
       changeType: "positive",
       icon: (
         <svg
@@ -31,7 +33,7 @@ const KeyMetricsCards = () => {
     {
       id: 2,
       title: "Total Orders",
-      value: "1,230",
+      value: (metricsData.totalOrders || 0).toLocaleString(),
       change: "+3%",
       changeType: "positive",
       icon: (
@@ -52,7 +54,7 @@ const KeyMetricsCards = () => {
     {
       id: 3,
       title: "Total Customers",
-      value: "742",
+      value: (metricsData.totalCustomers || 0).toLocaleString(),
       change: "+7%",
       changeType: "positive",
       icon: (
@@ -68,10 +70,10 @@ const KeyMetricsCards = () => {
     },
     {
       id: 4,
-      title: "Active Offers",
-      value: "6",
+      title: "Completed Orders",
+      value: (metricsData.completedOrders || 0).toLocaleString(),
       change: "-1",
-      changeType: "negative",
+      changeType: "neutral",
       icon: (
         <svg
           className="w-6 h-6 text-orange-600"
@@ -101,11 +103,10 @@ const KeyMetricsCards = () => {
               {metric.icon}
             </div>
             <div
-              className={`flex items-center gap-1 text-sm font-medium ${
-                metric.changeType === "positive"
+              className={`flex items-center gap-1 text-sm font-medium ${metric.changeType === "positive"
                   ? "text-green-600"
                   : "text-red-600"
-              }`}
+                }`}
             >
               {metric.changeType === "positive" ? (
                 <svg

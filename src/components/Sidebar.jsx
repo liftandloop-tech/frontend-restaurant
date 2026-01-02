@@ -42,19 +42,33 @@ const Sidebar = ({ onLogout, onCollapse }) => {
         navigate('/profile');
     };
 
-    const menuItems = [
-        { path: "/", icon: <LuLayoutDashboard />, label: "Dashboard" },
-        { path: "/tables", icon: <MdOutlineTableBar />, label: "Tables" },
-        { path: "/orders", icon: <LuShoppingBag />, label: "Orders" },
-        { path: "/kots", icon: <LuClock />, label: "KOTs" },
-        { path: "/reservations", icon: <LuCalendarDays />, label: "Reservations" },
-        { path: "/menu-management", icon: <LuMenu />, label: "Menu" },
-        { path: "/inventory-management", icon: <LuPackage />, label: "Inventory" },
-        { path: "/staff-management", icon: <LuUsers />, label: "Staff" },
-        { path: "/reports", icon: <FiBarChart />, label: "Reports" },
-        { path: "/customers", icon: <LuUser />, label: "Customers" },
-        { path: "/offers", icon: <AiOutlinePercentage />, label: "Offers" },
-        //  { path: "/settings", icon: <LuSettings />, label: "Settings" },
+    const navGroups = [
+        {
+            title: "Main",
+            items: [
+                { path: "/", icon: <LuLayoutDashboard />, label: "Dashboard" },
+            ]
+        },
+        {
+            title: "Booking",
+            items: [
+                { path: "/tables", icon: <MdOutlineTableBar />, label: "Tables" },
+                { path: "/orders", icon: <LuShoppingBag />, label: "Orders" },
+                { path: "/kots", icon: <LuClock />, label: "KOTs" },
+                { path: "/reservations", icon: <LuCalendarDays />, label: "Reservations" },
+            ]
+        },
+        {
+            title: "Setting",
+            items: [
+                { path: "/menu-management", icon: <LuMenu />, label: "Menu" },
+                { path: "/inventory-management", icon: <LuPackage />, label: "Inventory" },
+                { path: "/staff-management", icon: <LuUsers />, label: "Staff" },
+                { path: "/reports", icon: <FiBarChart />, label: "Reports" },
+                { path: "/customers", icon: <LuUser />, label: "Customers" },
+                { path: "/offers", icon: <AiOutlinePercentage />, label: "Offers" },
+            ]
+        }
     ];
 
     const handleLogoutClick = () => {
@@ -82,25 +96,30 @@ const Sidebar = ({ onLogout, onCollapse }) => {
 
             {/* Navigation Menu */}
             <nav className="sidebar-nav">
-                <div className="nav-group">
-                    <span className="group-title">{!isCollapsed && "Main Menu"}</span>
-                    {menuItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-                            title={isCollapsed ? item.label : ""}
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <span className="nav-icon">{item.icon}</span>
-                                    {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                                    {isActive && !isCollapsed && <div className="active-indicator" />}
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </div>
+                {navGroups.map((group, groupIndex) => (
+                    <div className="nav-group" key={groupIndex}>
+                        <span className="group-title">
+                            {!isCollapsed && (group.title === "Main" ? "Main Menu" : group.title)}
+                            {isCollapsed && <div className="h-4"></div>} {/* Spacer for collapsed mode */}
+                        </span>
+                        {group.items.map((item) => (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+                                title={isCollapsed ? item.label : ""}
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        <span className="nav-icon">{item.icon}</span>
+                                        {!isCollapsed && <span className="nav-label">{item.label}</span>}
+                                        {isActive && !isCollapsed && <div className="active-indicator" />}
+                                    </>
+                                )}
+                            </NavLink>
+                        ))}
+                    </div>
+                ))}
             </nav>
 
             {/* User & Footer Section */}

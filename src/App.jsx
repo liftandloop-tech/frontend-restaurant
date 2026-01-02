@@ -57,6 +57,8 @@ const CustomerReport = React.lazy(() => import("./CustomerReport"))
 const KOTManagement = React.lazy(() => import("./KOTManagement"))
 const WaiterNotifications = React.lazy(() => import("./WaiterNotifications"))
 const PhoneOrder = React.lazy(() => import("./PhoneOrder"))
+const ForgotPassword = React.lazy(() => import("./ForgotPassword"))
+const ResetPassword = React.lazy(() => import("./ResetPassword"))
 //const OnlineDeliveryOrder = React.lazy(() => import("./OnlineDeliveryOrder"))
 
 
@@ -222,6 +224,22 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <Register onRegister={handleRegister} />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/reset-password/:token"
+                element={
+                  <PublicRoute>
+                    <ResetPassword />
                   </PublicRoute>
                 }
               />

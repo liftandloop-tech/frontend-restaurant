@@ -8,23 +8,19 @@ import {
 } from "./components/reports-dashboard-components";
 import ScheduleReportModal from "./components/reports-dashboard-components/ScheduleReportModal";
 import { exportPDF, createScheduledReport } from "./utils/reports";
+import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
 
-/**
- * ReportsDashboard - Main component for the Reports Dashboard page
- *
- * This component renders a comprehensive analytics dashboard with:
- * - Header with title, subtitle, and action buttons
- * - Key metrics cards showing revenue, orders, customers, and offers
- * - Report categories grid with 9 different report types
- * - Analytics overview with charts and visualizations
- * - Footer with sync status and customization options
- *
- * The dashboard is fully responsive and uses Tailwind CSS for styling.
- * All components are modular and reusable with proper prop handling.
- */
 const ReportsDashboard = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetch real data from backend
+  const { data: reportResponse, isLoading, error } = useGetDashboardStatsQuery({
+    reportType: 'all',
+    dateRange: 'This Month'
+  });
+
+  const reportData = reportResponse?.success ? reportResponse.data : null;
 
 
   // Handle Export PDF
@@ -38,12 +34,12 @@ const ReportsDashboard = () => {
       };
 
       const response = await exportPDF(filters);
-      
+
       if (response.success && response.data) {
         // Create a print-friendly version with backend data
         const reportData = response.data;
         const printWindow = window.open("", "_blank");
-        
+
         if (printWindow) {
           printWindow.document.write(`
             <!DOCTYPE html>
@@ -125,7 +121,7 @@ const ReportsDashboard = () => {
   const handleScheduleSubmit = async (scheduleData) => {
     try {
       const response = await createScheduledReport(scheduleData);
-      
+
       if (response.success) {
         setSuccessMessage(
           `Report scheduled successfully! Reports will be sent to ${scheduleData.email} ${scheduleData.frequency} at ${scheduleData.time}.`
@@ -188,7 +184,13 @@ const ReportsDashboard = () => {
         />
 
         {/* Key Metrics Cards */}
-        <KeyMetricsCards />
+        {isLoading ? (
+          <div className="h-40 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <KeyMetricsCards data={reportData} />
+        )}
 
         {/* Report Categories Grid */}
         <div className="mt-15">

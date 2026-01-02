@@ -28,7 +28,30 @@ import {
  * The dashboard is fully responsive and uses Tailwind CSS for styling.
  * All components are modular and reusable with proper prop handling.
  */
+import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
+import { useGetOrdersQuery } from "./features/orders/ordersApiSlice";
+
 const OrderReport = () => {
+  // Fetch stats (specific for order report)
+  const { data: statsResponse, isLoading: statsLoading } = useGetDashboardStatsQuery({
+    reportType: 'order',
+    dateRange: 'This Month'
+  });
+
+  // Fetch recent orders
+  const { data: ordersResponse, isLoading: ordersLoading } = useGetOrdersQuery({ limit: 10 });
+
+  const statsData = statsResponse?.success ? statsResponse.data : null;
+  const ordersData = ordersResponse?.success ? ordersResponse.data : [];
+
+  if (statsLoading || ordersLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Container */}
@@ -37,7 +60,7 @@ const OrderReport = () => {
         <Header />
 
         {/* Key Metrics Cards */}
-        <KeyMetricsCards />
+        <KeyMetricsCards data={statsData} />
 
         {/* Main Content Grid */}
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -45,27 +68,27 @@ const OrderReport = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Orders and Revenue by Channel Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <OrdersByChannelChart />
-              <RevenueByChannelChart />
+              <OrdersByChannelChart data={statsData} />
+              <RevenueByChannelChart data={statsData} />
             </div>
 
             {/* Top Performing Items */}
-            <TopPerformingItems />
+            <TopPerformingItems data={statsData} />
 
             {/* Service Time and Server Performance */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AverageServiceTimeChart />
-              <FastestServerCard />
+              <AverageServiceTimeChart data={statsData} />
+              <FastestServerCard data={statsData} />
             </div>
 
             {/* Customer Feedback Table */}
-            <FeedbackRatingsChart />
+            <FeedbackRatingsChart data={statsData} />
           </div>
 
           {/* Right Column - Insights and Actions */}
           <div className="space-y-6">
             {/* Customer Insights */}
-            <CustomerInsightsCard />
+            <CustomerInsightsCard data={statsData} />
 
             {/* Operational Notes */}
             <OperationalNotes />
