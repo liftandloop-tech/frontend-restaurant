@@ -11,6 +11,7 @@ import {
     LuLogOut,
     LuChevronLeft,
     LuChevronRight,
+    LuChevronDown,
     LuClock,
     LuBell,
     LuUser,
@@ -71,6 +72,20 @@ const Sidebar = ({ onLogout, onCollapse }) => {
         }
     ];
 
+    const [expandedGroups, setExpandedGroups] = useState({
+        Main: true,
+        Booking: true,
+        Setting: true
+    });
+
+    const toggleGroup = (groupTitle) => {
+        if (isCollapsed) return; // Don't toggle in collapsed mode
+        setExpandedGroups(prev => ({
+            ...prev,
+            [groupTitle]: !prev[groupTitle]
+        }));
+    };
+
     const handleLogoutClick = () => {
         if (onLogout) onLogout();
         navigate("/login");
@@ -98,26 +113,44 @@ const Sidebar = ({ onLogout, onCollapse }) => {
             <nav className="sidebar-nav">
                 {navGroups.map((group, groupIndex) => (
                     <div className="nav-group" key={groupIndex}>
-                        <span className="group-title">
-                            {!isCollapsed && (group.title === "Main" ? "Main Menu" : group.title)}
-                            {isCollapsed && <div className="h-4"></div>} {/* Spacer for collapsed mode */}
-                        </span>
-                        {group.items.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-                                title={isCollapsed ? item.label : ""}
-                            >
-                                {({ isActive }) => (
-                                    <>
-                                        <span className="nav-icon">{item.icon}</span>
-                                        {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                                        {isActive && !isCollapsed && <div className="active-indicator" />}
-                                    </>
-                                )}
-                            </NavLink>
-                        ))}
+                        {/* Group Header */}
+                        <div
+                            className={`group-header ${group.title !== "Main" && !isCollapsed ? "cursor-pointer flex items-center justify-between" : ""}`}
+                            onClick={() => group.title !== "Main" && toggleGroup(group.title)}
+                        >
+                            <span className="group-title">
+                                {!isCollapsed && (group.title === "Main" ? "Main Menu" : group.title)}
+                                {isCollapsed && <div className="h-4"></div>} {/* Spacer for collapsed mode */}
+                            </span>
+
+                            {/* Collapse Icon */}
+                            {!isCollapsed && group.title !== "Main" && (
+                                <span className="text-gray-400 text-sm">
+                                    {expandedGroups[group.title] ? <LuChevronDown className="transform rotate-180 transition-transform" /> : <LuChevronDown className="transition-transform" />}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Group Items */}
+                        <div className={`group-items transition-all duration-300 overflow-hidden ${(isCollapsed || expandedGroups[group.title]) ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                            }`}>
+                            {group.items.map((item) => (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+                                    title={isCollapsed ? item.label : ""}
+                                >
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className="nav-icon">{item.icon}</span>
+                                            {!isCollapsed && <span className="nav-label">{item.label}</span>}
+                                            {isActive && !isCollapsed && <div className="active-indicator" />}
+                                        </>
+                                    )}
+                                </NavLink>
+                            ))}
+                        </div>
                     </div>
                 ))}
             </nav>
