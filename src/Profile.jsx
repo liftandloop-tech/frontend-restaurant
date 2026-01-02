@@ -110,9 +110,9 @@ const Profile = () => {
             ...prev,
             owner: {
               ...prev.owner,
-              name: userProfile.fullName || userProfile.name || "N/A",
+              name: userProfile.username || userProfile.name || userProfile.email || "N/A", // Prioritize login name (username/name)
               email: userProfile.email || "N/A",
-              role: userProfile.role || "N/A",
+              role: "Admin", // Display as Admin as requested
               contact: userProfile.mobile || "N/A",
               joinedOn: userProfile.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : "N/A",
             },
