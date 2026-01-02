@@ -7,6 +7,20 @@ const baseQuery = fetchBaseQuery({
         if (token) {
             headers.set('authorization', `Bearer ${token}`);
         }
+
+        // Attempt to attach restaurantId from local storage for context recovery
+        try {
+            const userDataStr = localStorage.getItem('userData');
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
+                if (userData && userData.restaurantId) {
+                    headers.set('x-restaurant-id', userData.restaurantId);
+                }
+            }
+        } catch (error) {
+            console.warn("Failed to parse user data for restaurant context", error);
+        }
+
         return headers;
     },
 });
