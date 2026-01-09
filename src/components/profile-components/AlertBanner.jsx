@@ -5,6 +5,8 @@ import React from "react";
  * Displays license expiration warning banner
  */
 const AlertBanner = ({ daysRemaining = 5 }) => {
+  if (daysRemaining > 5 || daysRemaining < 0) return null;
+
   return (
     <div className="w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
       <div className="flex items-center">

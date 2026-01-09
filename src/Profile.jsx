@@ -360,9 +360,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#F7F8FA] pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {daysRemaining <= 5 && daysRemaining >= 0 && (
-          <AlertBanner daysRemaining={daysRemaining} />
-        )}
+        <AlertBanner daysRemaining={daysRemaining} />
 
         <BusinessProfileHeader
           onEditInfo={handleEditInfo}
