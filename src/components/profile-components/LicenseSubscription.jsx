@@ -19,14 +19,29 @@ const LicenseSubscription = ({
   onCopyKey,
   onRenewLicense,
   onUpgradePlan,
+  onVerifyLicense,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isEditingKey, setIsEditingKey] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const handleCopyKey = () => {
     navigator.clipboard.writeText(licenseData.licenseKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     if (onCopyKey) onCopyKey();
+  };
+
+  const handleVerify = async () => {
+    if (!keyInput.trim()) return;
+    setIsVerifying(true);
+    const success = await onVerifyLicense(keyInput);
+    setIsVerifying(false);
+    if (success) {
+      setIsEditingKey(false);
+      setKeyInput("");
+    }
   };
 
   const getStatusColor = (status) => {
@@ -57,33 +72,58 @@ const LicenseSubscription = ({
             </svg>
             <div className="flex-1">
               <p className="text-sm text-gray-500 mb-1">License Key</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-blue-600">
-                  {licenseData.licenseKey}
-                </p>
-                <button
-                  onClick={handleCopyKey}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Copy license key"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              {isEditingKey ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={keyInput}
+                    onChange={(e) => setKeyInput(e.target.value)}
+                    className="text-sm border rounded px-2 py-1 w-full max-w-[200px]"
+                    placeholder="Enter License Key"
+                  />
+                  <button
+                    onClick={handleVerify}
+                    disabled={isVerifying}
+                    className="bg-blue-600 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                </button>
-                {copied && (
-                  <span className="text-xs text-green-600">Copied!</span>
-                )}
-              </div>
+                    {isVerifying ? "Verifying..." : "Verify"}
+                  </button>
+                  <button
+                    onClick={() => setIsEditingKey(false)}
+                    className="text-gray-500 text-xs px-2 py-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-blue-600">
+                    {licenseData.licenseKey}
+                  </p>
+                  <button
+                    onClick={handleCopyKey}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Copy license key"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                  {copied && (
+                    <span className="text-xs text-green-600">Copied!</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -251,6 +291,28 @@ const LicenseSubscription = ({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-200">
+        <button
+          onClick={() => {
+            setIsEditingKey(true);
+            setKeyInput("");
+          }}
+          className="inline-flex items-center justify-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+        >
+          <svg
+            className="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            />
+          </svg>
+          Activate License
+        </button>
         <button
           onClick={handleCopyKey}
           className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"

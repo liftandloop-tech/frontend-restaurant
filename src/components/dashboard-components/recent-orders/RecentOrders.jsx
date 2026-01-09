@@ -32,7 +32,7 @@ const RecentOrders = ({ orders = [], loading = false }) => {
     : orders.filter(o => o.status === statusFilter);
 
   return (
-    <div className="bg-white rounded-xl flex flex-col h-full border-1 px-5 py-7 border-gray-300 w-[200%] overflow-hidden">
+    <div className="bg-white rounded-xl flex flex-col h-full border-1 px-5 py-7 border-gray-300 w-[152%] overflow-hidden">
       <div className="w-[100%] flex flex-row justify-between items-center mb-5">
         <div className="flex items-center gap-4">
           <h2 className="text-[18px] font-semibold">Recent Orders</h2>

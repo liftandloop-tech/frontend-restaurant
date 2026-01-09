@@ -141,6 +141,7 @@ const Profile = () => {
             license: {
               ...(prev.license || {}),
               licenseKey: restaurantData.licenseKey || "N/A",
+              expiryDate: restaurantData.licenseExpiryDate || "...",
               status: restaurantData.isActive ? "Active" : "Inactive"
             }
           }));
@@ -342,10 +343,26 @@ const Profile = () => {
     }, 3000);
   };
 
+  const calculateDaysRemaining = (expiryDate) => {
+    if (!expiryDate || expiryDate === "...") return 0;
+    const today = new Date();
+    // Assuming date format "DD Mon YYYY" or ISO
+    const expiry = new Date(expiryDate);
+    if (isNaN(expiry.getTime())) return 0; // Invalid date
+
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysRemaining = calculateDaysRemaining(profileData.license.expiryDate);
+
   return (
     <div className="min-h-screen bg-[#F7F8FA] pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AlertBanner daysRemaining={5} />
+        {daysRemaining <= 5 && daysRemaining >= 0 && (
+          <AlertBanner daysRemaining={daysRemaining} />
+        )}
 
         <BusinessProfileHeader
           onEditInfo={handleEditInfo}
@@ -364,6 +381,31 @@ const Profile = () => {
           onCopyKey={handleCopyKey}
           onRenewLicense={handleRenewLicense}
           onUpgradePlan={handleUpgradePlan}
+          onVerifyLicense={async (key) => {
+            try {
+              const res = await api.post('/license/verify', { licenseKey: key });
+              if (res.success) {
+                showNotification("License verified and activated successfully!", "success");
+                setProfileData(prev => ({
+                  ...prev,
+                  license: {
+                    ...prev.license,
+                    status: "Active",
+                    licenseKey: key,
+                    plan: res.data?.plan || prev.license.plan,
+                    expiryDate: res.data?.expiryDate ? new Date(res.data.expiryDate).toLocaleDateString() : prev.license.expiryDate
+                  }
+                }));
+                addActivity("Activated License", "License");
+                return true;
+              }
+              return false;
+            } catch (error) {
+              console.error(error);
+              showNotification(error.response?.data?.message || "License verification failed", "error");
+              return false;
+            }
+          }}
         />
 
         <AccountSecurity
