@@ -1,76 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 
 /**
  * StaffPayrollTable component displays the main payroll table with staff information
  * Includes checkboxes for selection, staff details, days worked, salary breakdown, and status
  */
 const StaffPayrollTable = ({
+  staffData = [],
   selectedStaff,
   onStaffSelection,
   onSelectAll,
+  isLoading
 }) => {
-  // Sample staff data - in a real app, this would come from props or API
-  const staffData = [
-    {
-      id: 1,
-      name: "Alex Johnson",
-      role: "Head Chef",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      days: 22,
-      basic: 25000,
-      bonus: 2500,
-      deductions: 500,
-      finalPay: 27000,
-      status: "Paid",
-    },
-    {
-      id: 2,
-      name: "Sarah Chen",
-      role: "Senior Waiter",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-      days: 20,
-      basic: 18000,
-      bonus: 3200,
-      deductions: 200,
-      finalPay: 21000,
-      status: "Pending",
-    },
-    {
-      id: 3,
-      name: "Mike Rodriguez",
-      role: "Cashier",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      days: 24,
-      basic: 16000,
-      bonus: 800,
-      deductions: 0,
-      finalPay: 16800,
-      status: "Processing",
-    },
-    {
-      id: 4,
-      name: "Emma Wilson",
-      role: "Waiter",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      days: 18,
-      basic: 15000,
-      bonus: 2100,
-      deductions: 300,
-      finalPay: 16800,
-      status: "Pending",
-    },
-  ];
-
   const [selectAll, setSelectAll] = useState(false);
 
-  const handleSelectAll = () => {
-    const newSelectAll = !selectAll;
-    setSelectAll(newSelectAll);
-    onSelectAll(newSelectAll ? staffData.map((staff) => staff.id) : []);
+  useEffect(() => {
+    // Reset select all when staff data changes or selection changes
+    if (staffData.length > 0 && selectedStaff.length === staffData.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedStaff, staffData]);
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      onSelectAll(staffData.map((staff) => staff._id || staff.id));
+    } else {
+      onSelectAll([]);
+    }
   };
 
   const handleStaffSelect = (staffId) => {
@@ -79,7 +39,6 @@ const StaffPayrollTable = ({
       : [...selectedStaff, staffId];
 
     onStaffSelection(newSelected);
-    setSelectAll(newSelected.length === staffData.length);
   };
 
   const getStatusBadge = (status) => {
@@ -150,8 +109,16 @@ const StaffPayrollTable = ({
   };
 
   const totalSelectedPay = staffData
-    .filter((staff) => selectedStaff.includes(staff.id))
-    .reduce((sum, staff) => sum + staff.finalPay, 0);
+    .filter((staff) => selectedStaff.includes(staff._id || staff.id))
+    .reduce((sum, staff) => sum + (staff.finalPay || staff.baseSalary || 0), 0);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading payroll data...</div>;
+  }
+
+  if (staffData.length === 0) {
+    return <div className="p-8 text-center text-gray-500">No staff members found matching your filters.</div>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -205,71 +172,86 @@ const StaffPayrollTable = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {staffData.map((staff) => (
-              <tr
-                key={staff.id}
-                className="hover:bg-gray-50 transition-colors duration-150"
-              >
-                {/* Checkbox */}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={selectedStaff.includes(staff.id)}
-                    onChange={() => handleStaffSelect(staff.id)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                </td>
+            {staffData.map((staff) => {
+              const staffId = staff._id || staff.id;
+              const basicSalary = staff.baseSalary || 0;
+              const bonus = 0; // Placeholder until backend supports bonus
+              const deductions = 0; // Placeholder until backend supports deductions
+              const finalPay = basicSalary + bonus - deductions;
+              const currentStatus = "Pending"; // Placeholder
 
-                {/* Staff Info */}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img
-                        className="h-10 w-10 rounded-full object-cover"
-                        src={staff.avatar}
-                        alt={staff.name}
-                      />
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {staff.name}
+              return (
+                <tr
+                  key={staffId}
+                  className="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  {/* Checkbox */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedStaff.includes(staffId)}
+                      onChange={() => handleStaffSelect(staffId)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </td>
+
+                  {/* Staff Info */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        {staff.profilePicture || staff.avatar ? (
+                          <img
+                            className="h-10 w-10 rounded-full object-cover"
+                            src={staff.profilePicture || staff.avatar}
+                            alt={staff.fullName || staff.name}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                            {(staff.fullName || staff.name || "?").charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-sm text-gray-500">{staff.role}</div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {staff.fullName || staff.name}
+                        </div>
+                        <div className="text-sm text-gray-500">{staff.role}</div>
+                      </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
 
-                {/* Days */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {staff.days}
-                </td>
+                  {/* Days */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {staff.days || 26}
+                  </td>
 
-                {/* Basic */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ₹{staff.basic.toLocaleString()}
-                </td>
+                  {/* Basic */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹{basicSalary.toLocaleString()}
+                  </td>
 
-                {/* Bonus */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ₹{staff.bonus.toLocaleString()}
-                </td>
+                  {/* Bonus */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹{bonus.toLocaleString()}
+                  </td>
 
-                {/* Deductions */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ₹{staff.deductions.toLocaleString()}
-                </td>
+                  {/* Deductions */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ₹{deductions.toLocaleString()}
+                  </td>
 
-                {/* Final Pay */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                  ₹{staff.finalPay.toLocaleString()}
-                </td>
+                  {/* Final Pay */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    ₹{finalPay.toLocaleString()}
+                  </td>
 
-                {/* Status */}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(staff.status)}
-                </td>
-              </tr>
-            ))}
+                  {/* Status */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(staff.status || currentStatus)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -285,6 +267,14 @@ const StaffPayrollTable = ({
       )}
     </div>
   );
+};
+
+StaffPayrollTable.propTypes = {
+  staffData: PropTypes.array,
+  selectedStaff: PropTypes.array,
+  onStaffSelection: PropTypes.func,
+  onSelectAll: PropTypes.func,
+  isLoading: PropTypes.bool
 };
 
 export default StaffPayrollTable;

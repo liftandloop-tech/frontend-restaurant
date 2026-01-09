@@ -42,6 +42,90 @@ const NewOrder = () => {
     });
   };
 
+  const handleSaveDraft = async () => {
+    setError("");
+    setSuccess("");
+
+    if (cartItems.length === 0) {
+      setError("Please add at least one item to save as draft");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const validatedItems = cartItems.map((item) => ({
+        name: item.name.trim(),
+        qty: parseInt(item.qty),
+        price: parseFloat(item.price)
+      }));
+
+      const orderData = {
+        items: validatedItems,
+        notes: orderInfo.notes ? orderInfo.notes.trim() : "",
+        source: orderType,
+        status: 'draft',
+        waiterId: orderInfo.waiterId && orderInfo.waiterId.trim() !== "" ? orderInfo.waiterId : null,
+      };
+
+      if (orderType === "takeaway") {
+        if (orderInfo.tableNumber) orderData.tableNumber = parseInt(orderInfo.tableNumber);
+        orderData.customerName = orderInfo.customerName;
+        orderData.customerPhone = orderInfo.customerPhone;
+      } else if (orderType === "phone") {
+        orderData.customerName = orderInfo.customerName;
+        orderData.customerPhone = orderInfo.customerPhone;
+        orderData.deliveryAddress = orderInfo.deliveryAddress;
+        orderData.deliveryPhone = orderInfo.deliveryPhone;
+        orderData.deliveryTime = orderInfo.deliveryTime;
+      } else if (orderType === "online") {
+        orderData.customerName = orderInfo.customerName;
+        orderData.customerEmail = orderInfo.customerEmail;
+        orderData.deliveryAddress = orderInfo.deliveryAddress;
+        orderData.deliveryPhone = orderInfo.deliveryPhone;
+        orderData.deliveryTime = orderInfo.deliveryTime;
+      }
+
+      if (orderData.waiterId && (!/^[a-fA-F0-9]{24}$/.test(orderData.waiterId))) {
+        delete orderData.waiterId;
+      }
+
+      const response = await createOrder(orderData);
+
+      if (response.success) {
+        setSuccess(`Draft order saved successfully! ID: ${response.data.orderNumber || "N/A"}`);
+        setTimeout(() => {
+          setCartItems([]);
+          setOrderInfo({
+            customerName: "",
+            customerPhone: "",
+            customerEmail: "",
+            tableNumber: "",
+            deliveryAddress: "",
+            deliveryPhone: "",
+            deliveryTime: "",
+            notes: "",
+            waiterId: "",
+          });
+          setSuccess("");
+          navigate("/orders");
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Save draft error:", error);
+      setError(error.message || "Failed to save draft.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (cartItems.length > 0 && !window.confirm("Are you sure you want to cancel? All items will be lost.")) {
+      return;
+    }
+    navigate("/orders");
+  };
+
   const handleConfirmOrder = async () => {
     // Clear previous messages
     setError("");
@@ -276,7 +360,10 @@ const NewOrder = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">New Order</h1>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handleSaveDraft}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg
                   className="w-4 h-4"
                   fill="currentColor"
@@ -284,9 +371,11 @@ const NewOrder = () => {
                 >
                   <path d="M7 2a1 1 0 000 2h6a1 1 0 100-2H7zM4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 8a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1z" />
                 </svg>
-                Save Draft
+                {loading ? 'Saving...' : 'Save Draft'}
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
             </div>

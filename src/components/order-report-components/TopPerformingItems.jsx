@@ -10,33 +10,17 @@ import React from "react";
  * - View full menu performance button
  * - Responsive table design
  */
-const TopPerformingItems = () => {
-  const topItems = [
-    {
-      rank: 1,
-      name: "Paneer Butter Masala",
-      orders: 246,
-      revenue: 147600,
-      rating: 4.8,
-      medal: "🥇",
-    },
-    {
-      rank: 2,
-      name: "Veg Biryani",
-      orders: 219,
-      revenue: 109500,
-      rating: 4.7,
-      medal: "🥈",
-    },
-    {
-      rank: 3,
-      name: "Butter Naan",
-      orders: 205,
-      revenue: 51200,
-      rating: 4.6,
-      medal: "🥉",
-    },
-  ];
+const TopPerformingItems = ({ data }) => {
+  const items = data?.charts?.topItems || [];
+
+  const topItems = items.map((item, index) => ({
+    rank: index + 1,
+    name: item.name,
+    orders: item.quantity,
+    revenue: item.revenue,
+    rating: 4.5, // Mock rating as it's not in backend yet
+    medal: index === 0 ? "🥇" : (index === 1 ? "🥈" : (index === 2 ? "🥉" : ""))
+  }));
 
   const formatRevenue = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -50,9 +34,8 @@ const TopPerformingItems = () => {
     return Array.from({ length: 5 }, (_, index) => (
       <span
         key={index}
-        className={`text-sm ${
-          index < Math.floor(rating) ? "text-yellow-400" : "text-gray-300"
-        }`}
+        className={`text-sm ${index < Math.floor(rating) ? "text-yellow-400" : "text-gray-300"
+          }`}
       >
         ★
       </span>
@@ -60,7 +43,7 @@ const TopPerformingItems = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 w-300">
       {/* Section Title */}
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
         Top Performing Items
@@ -109,7 +92,7 @@ const TopPerformingItems = () => {
                 {/* Orders */}
                 <td className="py-4 px-2 text-right">
                   <span className="text-sm font-medium text-gray-900">
-                    {item.orders.toLocaleString()}
+                    {(item.orders || 0).toLocaleString()}
                   </span>
                 </td>
 

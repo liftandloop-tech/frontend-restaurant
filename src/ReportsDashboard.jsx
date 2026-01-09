@@ -14,10 +14,14 @@ const ReportsDashboard = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [dateRange, setDateRange] = useState('This Month');
+  const [branch, setBranch] = useState('All Branches');
+
   // Fetch real data from backend
   const { data: reportResponse, isLoading, error } = useGetDashboardStatsQuery({
     reportType: 'all',
-    dateRange: 'This Month'
+    dateRange: dateRange,
+    // branch: branch // API might not support branch yet, but good to add if needed.
   });
 
   const reportData = reportResponse?.success ? reportResponse.data : null;
@@ -26,11 +30,11 @@ const ReportsDashboard = () => {
   // Handle Export PDF
   const handleExportPDF = async () => {
     try {
-      // Get current filter values (you can add state for these later)
+      // Get current filter values
       const filters = {
         reportType: 'all',
-        dateRange: 'This Month',
-        branch: 'All Branches'
+        dateRange: dateRange,
+        branch: branch
       };
 
       const response = await exportPDF(filters);
@@ -181,6 +185,10 @@ const ReportsDashboard = () => {
         <Header
           onExportPDF={handleExportPDF}
           onScheduleReport={handleScheduleReport}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          branch={branch}
+          setBranch={setBranch}
         />
 
         {/* Key Metrics Cards */}
@@ -199,7 +207,7 @@ const ReportsDashboard = () => {
 
         {/* Analytics Overview Charts */}
         <div className="mt-10">
-          <AnalyticsOverview />
+          <AnalyticsOverview data={reportData} />
         </div>
 
         {/* Footer Section */}

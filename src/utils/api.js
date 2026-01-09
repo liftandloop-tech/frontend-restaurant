@@ -106,6 +106,19 @@ export const apiCall = async (endpoint, method = 'GET', data = null, retry = tru
     },
   };
 
+  // Add updated logic to retrieve restaurantId from userData
+  const userDataStr = localStorage.getItem('userData');
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(userDataStr);
+      if (userData && userData.restaurantId) {
+        options.headers['x-restaurant-id'] = userData.restaurantId;
+      }
+    } catch (e) {
+      console.warn('Failed to parse userData for restaurantId', e);
+    }
+  }
+
   // Add token to header if available
   if (token) {
     options.headers['Authorization'] = `Bearer ${token}`;

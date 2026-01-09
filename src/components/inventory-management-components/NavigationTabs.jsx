@@ -9,9 +9,9 @@ const NavigationTabs = ({ activeTab, onTabChange }) => {
   // Define the navigation tabs
   const tabs = [
     "Stock Overview",
-    "Vendors",
-    "Purchase Orders",
-    "Wastage & Adjustments",
+   // "Vendors",
+   // "Purchase Orders",
+   // "Wastage & Adjustments",
   ];
 
   return (

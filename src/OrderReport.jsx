@@ -5,11 +5,11 @@ import {
   OrdersByChannelChart,
   RevenueByChannelChart,
   TopPerformingItems,
-  AverageServiceTimeChart,
-  FastestServerCard,
-  FeedbackRatingsChart,
-  CustomerInsightsCard,
-  OperationalNotes,
+  //AverageServiceTimeChart,
+ //FastestServerCard,
+  //FeedbackRatingsChart,
+  //CustomerInsightsCard,
+  //OperationalNotes,
   Footer,
 } from "./components/order-report-components";
 
@@ -32,10 +32,15 @@ import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
 import { useGetOrdersQuery } from "./features/orders/ordersApiSlice";
 
 const OrderReport = () => {
+  const [dateRange, setDateRange] = React.useState('This Month');
+  const [branch, setBranch] = React.useState('All Branches');
+  const [orderType, setOrderType] = React.useState("All Orders");
+
   // Fetch stats (specific for order report)
   const { data: statsResponse, isLoading: statsLoading } = useGetDashboardStatsQuery({
     reportType: 'order',
-    dateRange: 'This Month'
+    dateRange: dateRange,
+    // branch: branch, // Pass branch if backend supports it
   });
 
   // Fetch recent orders
@@ -57,7 +62,14 @@ const OrderReport = () => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <Header />
+        <Header
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          branch={branch}
+          setBranch={setBranch}
+          orderType={orderType}
+          setOrderType={setOrderType}
+        />
 
         {/* Key Metrics Cards */}
         <KeyMetricsCards data={statsData} />
@@ -67,7 +79,7 @@ const OrderReport = () => {
           {/* Left Column - Charts and Tables */}
           <div className="lg:col-span-2 space-y-6">
             {/* Orders and Revenue by Channel Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-100">
               <OrdersByChannelChart data={statsData} />
               <RevenueByChannelChart data={statsData} />
             </div>
@@ -76,23 +88,23 @@ const OrderReport = () => {
             <TopPerformingItems data={statsData} />
 
             {/* Service Time and Server Performance */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AverageServiceTimeChart data={statsData} />
               <FastestServerCard data={statsData} />
-            </div>
+            </div> */}
 
             {/* Customer Feedback Table */}
-            <FeedbackRatingsChart data={statsData} />
-          </div>
+            {/* <FeedbackRatingsChart data={statsData} />*/}
+          </div> 
 
           {/* Right Column - Insights and Actions */}
-          <div className="space-y-6">
-            {/* Customer Insights */}
+          {/* <div className="space-y-6">
+            {/* Customer Insights 
             <CustomerInsightsCard data={statsData} />
 
-            {/* Operational Notes */}
+            {/* Operational Notes 
             <OperationalNotes />
-          </div>
+          </div> */}
         </div>
 
         {/* Footer Section */}

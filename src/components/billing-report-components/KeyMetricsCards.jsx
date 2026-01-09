@@ -8,11 +8,18 @@ const KeyMetricsCards = ({ data }) => {
   const metricsData = data?.metrics || {};
 
   const metrics = useMemo(() => {
+    const getTrend = (value) => {
+      const val = value || 0;
+      if (val > 0) return { value: `+${val}%`, direction: "up", color: "text-green-600" };
+      if (val < 0) return { value: `${val}%`, direction: "down", color: "text-red-600" };
+      return { value: "0%", direction: "neutral", color: "text-gray-600" };
+    };
+
     return [
       {
         id: 1,
         title: "Total Bills Generated",
-        value: (metricsData.totalOrders || 0).toLocaleString(), // Assuming orders = bills roughly
+        value: (metricsData.totalBills || 0).toLocaleString(),
         subtitle: `Period Total`,
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,11 +27,7 @@ const KeyMetricsCards = ({ data }) => {
           </svg>
         ),
         bgColor: "bg-blue-500",
-        trend: {
-          value: "0%", // Backend data pending for trend
-          direction: "neutral",
-          color: "text-gray-600",
-        },
+        trend: getTrend(metricsData.trends?.totalBills),
       },
       {
         id: 2,
@@ -37,16 +40,12 @@ const KeyMetricsCards = ({ data }) => {
           </svg>
         ),
         bgColor: "bg-green-500",
-        trend: {
-          value: "0%",
-          direction: "neutral",
-          color: "text-gray-600",
-        },
+        trend: getTrend(metricsData.trends?.totalRevenue),
       },
       {
         id: 3,
         title: "Average Bill Value",
-        value: `₹ ${(metricsData.averageOrderValue || 0).toLocaleString()}`,
+        value: `₹ ${Math.round(metricsData.averageBillValue || 0).toLocaleString()}`,
         subtitle: "Average revenue per order",
         icon: (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,11 +53,7 @@ const KeyMetricsCards = ({ data }) => {
           </svg>
         ),
         bgColor: "bg-purple-500",
-        trend: {
-          value: "0%",
-          direction: "neutral",
-          color: "text-gray-600",
-        },
+        trend: getTrend(metricsData.trends?.averageBillValue),
       },
       {
         id: 4,
@@ -71,11 +66,7 @@ const KeyMetricsCards = ({ data }) => {
           </svg>
         ),
         bgColor: "bg-orange-500",
-        trend: {
-          value: "0%",
-          direction: "neutral",
-          color: "text-gray-600",
-        },
+        trend: getTrend(metricsData.trends?.completedOrders),
       },
     ];
   }, [metricsData]);

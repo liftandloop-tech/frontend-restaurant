@@ -4,7 +4,7 @@ import React from "react";
  * KeyMetricsCards component displays the main performance metrics
  * Shows Total Revenue, Total Orders, Total Customers, and Active Offers
  */
-const KeyMetricsCards = ({ data }) => {
+const KeyMetricsCards = ({ data, value = 0, trend = 0 }) => {
   const metricsData = data?.metrics || {};
 
   const metrics = [
@@ -12,8 +12,8 @@ const KeyMetricsCards = ({ data }) => {
       id: 1,
       title: "Total Revenue",
       value: `₹${(metricsData.totalRevenue || 0).toLocaleString()}`,
-      change: "+5%", // Backend doesn't provide change % yet, keep static or calc if possible
-      changeType: "positive",
+      change: `${(metricsData.trends?.totalRevenue || 0) > 0 ? "+" : ""}${metricsData.trends?.totalRevenue || 0}%`,
+      changeType: (metricsData.trends?.totalRevenue || 0) >= 0 ? "positive" : "negative",
       icon: (
         <svg
           className="w-6 h-6 text-green-600"
@@ -34,8 +34,8 @@ const KeyMetricsCards = ({ data }) => {
       id: 2,
       title: "Total Orders",
       value: (metricsData.totalOrders || 0).toLocaleString(),
-      change: "+3%",
-      changeType: "positive",
+      change: `${(metricsData.trends?.totalOrders || 0) > 0 ? "+" : ""}${metricsData.trends?.totalOrders || 0}%`,
+      changeType: (metricsData.trends?.totalOrders || 0) >= 0 ? "positive" : "negative",
       icon: (
         <svg
           className="w-6 h-6 text-blue-600"
@@ -55,8 +55,8 @@ const KeyMetricsCards = ({ data }) => {
       id: 3,
       title: "Total Customers",
       value: (metricsData.totalCustomers || 0).toLocaleString(),
-      change: "+7%",
-      changeType: "positive",
+      change: `${(metricsData.trends?.totalCustomers || 0) > 0 ? "+" : ""}${metricsData.trends?.totalCustomers || 0}%`,
+      changeType: (metricsData.trends?.totalCustomers || 0) >= 0 ? "positive" : "negative",
       icon: (
         <svg
           className="w-6 h-6 text-blue-600"
@@ -72,8 +72,8 @@ const KeyMetricsCards = ({ data }) => {
       id: 4,
       title: "Completed Orders",
       value: (metricsData.completedOrders || 0).toLocaleString(),
-      change: "-1",
-      changeType: "neutral",
+      change: `${(metricsData.trends?.completedOrders || 0) > 0 ? "+" : ""}${metricsData.trends?.completedOrders || 0}%`,
+      changeType: (metricsData.trends?.completedOrders || 0) >= 0 ? "positive" : "negative",
       icon: (
         <svg
           className="w-6 h-6 text-orange-600"
@@ -102,39 +102,41 @@ const KeyMetricsCards = ({ data }) => {
             <div className={`p-3 rounded-full ${metric.bgColor}`}>
               {metric.icon}
             </div>
-            <div
-              className={`flex items-center gap-1 text-sm font-medium ${metric.changeType === "positive"
+            {metric.change && (
+              <div
+                className={`flex items-center gap-1 text-sm font-medium ${metric.changeType === "positive"
                   ? "text-green-600"
                   : "text-red-600"
-                }`}
-            >
-              {metric.changeType === "positive" ? (
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-              {metric.change}
-            </div>
+                  }`}
+              >
+                {metric.changeType === "positive" ? (
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+                {metric.change}
+              </div>
+            )}
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">

@@ -17,7 +17,7 @@ const MenuItem = ({ item, onAddToOrder }) => {
       </div>
       <div className="flex justify-between items-center mt-4">
         <span className="font-bold text-lg text-gray-900">
-          ${price.toFixed(2)}
+          ₹{price}
         </span>
         <button
           onClick={() => onAddToOrder(item)}

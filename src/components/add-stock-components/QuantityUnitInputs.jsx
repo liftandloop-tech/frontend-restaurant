@@ -14,21 +14,15 @@ const QuantityUnitInputs = ({
   quantityRequired = true,
 }) => {
   // Common units for inventory items
+  // Common units for inventory items
   const units = [
-    "lbs",
     "kg",
     "g",
-    "oz",
-    "pieces",
-    "boxes",
-    "bags",
-    "bottles",
-    "cans",
-    "liters",
+    "l",
     "ml",
-    "gallons",
-    "dozen",
-    "packs",
+    "piece",
+    "pack",
+    "box"
   ];
 
   return (

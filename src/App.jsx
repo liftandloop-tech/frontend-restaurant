@@ -59,7 +59,13 @@ const WaiterNotifications = React.lazy(() => import("./WaiterNotifications"))
 const PhoneOrder = React.lazy(() => import("./PhoneOrder"))
 const ForgotPassword = React.lazy(() => import("./ForgotPassword"))
 const ResetPassword = React.lazy(() => import("./ResetPassword"))
-//const OnlineDeliveryOrder = React.lazy(() => import("./OnlineDeliveryOrder"))
+const InventoryReport = React.lazy(() => import("./InventoryReport"))
+const MenuReport = React.lazy(() => import("./MenuReport"))
+const StaffReport = React.lazy(() => import("./StaffReport"))
+const VendorReport = React.lazy(() => import("./VendorReport"))
+const PurchaseReport = React.lazy(() => import("./PurchaseReport"))
+const OfferReport = React.lazy(() => import("./OfferReport"))
+const LicenseKey = React.lazy(() => import("./LicenseKey"))
 
 
 import Sidebar from "./components/Sidebar.jsx";
@@ -405,6 +411,54 @@ const App = () => {
                 }
               />
               <Route
+                path="/reports/inventory"
+                element={
+                  <ProtectedRoute>
+                    <InventoryReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/menu"
+                element={
+                  <ProtectedRoute>
+                    <MenuReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/staff"
+                element={
+                  <ProtectedRoute>
+                    <StaffReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/vendors"
+                element={
+                  <ProtectedRoute>
+                    <VendorReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/purchase"
+                element={
+                  <ProtectedRoute>
+                    <PurchaseReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/offers"
+                element={
+                  <ProtectedRoute>
+                    <OfferReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/offers"
                 element={
                   <ProtectedRoute>
@@ -417,6 +471,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/license"
+                element={
+                  <ProtectedRoute>
+                    <LicenseKey />
                   </ProtectedRoute>
                 }
               />

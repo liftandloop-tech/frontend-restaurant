@@ -242,36 +242,19 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
                   <option value="phone">Phone Orders</option>
                 </select>
               </div>
-
-              {/* Customer Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Customer:
-                </label>
-                <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Filter by customer..."
-                    value={customerFilter}
-                    onChange={(e) => setCustomerFilter(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700 min-w-[200px]"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* View Mode Toggle and Order Buttons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-15">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700">
                   View:
                 </label>
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className="flex bg-gray-50 rounded-lg">
                   <button
                     onClick={() => setViewMode("cards")}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${viewMode === "cards"
+                    className={`px-3 py-1 text-sm rounded-md transition-colors${viewMode === "cards"
                       ? "bg-white text-blue-600 shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
                       }`}
@@ -282,27 +265,15 @@ const OrderManagement = ({ onOpenPhoneOrder }) => {
               </div>
 
               {/* Order Buttons */}
-              <div className="flex items-center gap-2">
-                {/* New Order Button */}
+              <div className="flex items-center gap-10">
+                {/* take Order Button */}
                 <button
-                  className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm h-[40px] w-[100px]"
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm h-[45px] w-[120px]"
                   onClick={() => navigate("/new-order")}
                 >
                   <FiPlus className="w-4 h-4" />
-                  <span>New Order</span>
+                  <span>Take Order</span>
                 </button>
-
-                {/* Phone Order Button */}
-                <button
-                  className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition-colors text-sm h-[40px] w-[100px]"
-                  onClick={onOpenPhoneOrder}
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <span>Phone Order</span>
-                </button>
-
               </div>
             </div>
           </div>

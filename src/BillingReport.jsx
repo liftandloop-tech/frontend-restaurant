@@ -29,12 +29,15 @@ import {
 import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
 import { useGetBillsQuery } from "./features/bills/billsApiSlice";
 
-const BillingReport = () => {
+const BillingReport = ({value = 0, trend = 0 }) => {
   // Fetch stats (reusing dashboard stats for summary)
   const { data: statsResponse, isLoading: statsLoading } = useGetDashboardStatsQuery({
     reportType: 'billing',
-    dateRange: 'This Month'
+    dateRange: 'This Month',
+    value,
+    trend
   });
+
 
   // Fetch recent bills
   const { data: billsResponse, isLoading: billsLoading } = useGetBillsQuery({ limit: 10 });

@@ -36,9 +36,6 @@ const Dashboard = ({ onTakeOrder }) => {
           <div className="col-span-2 h-full">
             <RecentOrders orders={recentOrders} loading={loading} />
           </div>
-          <div className="col-span-1 h-full">
-            Optional side panel
-          </div>
         </div>{" "}
         <div className="flex items-center flex-col h-fit mt-[40px]">
           <PopularAlerts summary={summary} />

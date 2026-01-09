@@ -4,7 +4,14 @@ import React from "react";
  * Header component for the Reports Dashboard
  * Contains the main title, subtitle, and action buttons (Export PDF, Schedule Report, dropdowns)
  */
-const Header = ({ onExportPDF, onScheduleReport }) => {
+const Header = ({
+  onExportPDF,
+  onScheduleReport,
+  dateRange = 'This Month',
+  setDateRange,
+  branch = 'All Branches',
+  setBranch
+}) => {
   // Handle Export PDF
   const handleExportPDF = () => {
     if (onExportPDF) {
@@ -72,12 +79,20 @@ const Header = ({ onExportPDF, onScheduleReport }) => {
 
         {/* This Month Dropdown */}
         <div className="relative">
-          <select className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-50 transition-colors duration-200">
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange && setDateRange(e.target.value)}
+            className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-50 transition-colors duration-200"
+          >
+            <option>Today</option>
+            <option>Yesterday</option>
+            <option>This Week</option>
             <option>This Month</option>
             <option>Last Month</option>
             <option>Last 3 Months</option>
             <option>Last 6 Months</option>
             <option>This Year</option>
+            <option>All Time</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
             <svg
@@ -98,7 +113,11 @@ const Header = ({ onExportPDF, onScheduleReport }) => {
 
         {/* All Branches Dropdown */}
         <div className="relative">
-          <select className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-50 transition-colors duration-200">
+          <select
+            value={branch}
+            onChange={(e) => setBranch && setBranch(e.target.value)}
+            className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-8 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-50 transition-colors duration-200"
+          >
             <option>All Branches</option>
             <option>Main Branch</option>
             <option>Downtown Branch</option>

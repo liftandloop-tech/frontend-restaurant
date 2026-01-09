@@ -11,15 +11,24 @@ import React from "react";
  * - Responsive grid layout
  * - Hover effects and smooth transitions
  */
-const KeyMetricsCards = () => {
+const KeyMetricsCards = ({ data }) => {
+  const metricsData = data?.metrics || {};
+
+  const getTrend = (value) => {
+    const val = value || 0;
+    if (val > 0) return { value: `+${val}%`, changeType: "positive" };
+    if (val < 0) return { value: `${val}%`, changeType: "negative" };
+    return { value: "0%", changeType: "neutral" };
+  };
+
   const metrics = [
     {
       id: 1,
       title: "Total Orders",
-      value: "1,240",
-      subtitle: "Average 41 orders/day",
-      change: "+6%",
-      changeType: "positive",
+      value: (metricsData.totalOrders || 0).toLocaleString(),
+      subtitle: "Total received orders",
+      ...getTrend(metricsData.trends?.totalOrders),
+      change: getTrend(metricsData.trends?.totalOrders).value, // adapting to existing structure
       icon: (
         <svg
           className="w-6 h-6 text-blue-600"
@@ -39,10 +48,10 @@ const KeyMetricsCards = () => {
     {
       id: 2,
       title: "Total Revenue",
-      value: "₹12,10,000",
-      subtitle: "Excludes taxes & discounts",
-      change: "+4%",
-      changeType: "positive",
+      value: `₹${(metricsData.totalRevenue || 0).toLocaleString()}`,
+      subtitle: "Gross revenue",
+      ...getTrend(metricsData.trends?.totalRevenue),
+      change: getTrend(metricsData.trends?.totalRevenue).value,
       icon: (
         <svg
           className="w-6 h-6 text-green-600"
@@ -63,10 +72,10 @@ const KeyMetricsCards = () => {
     {
       id: 3,
       title: "Average Order Value",
-      value: "₹975",
-      subtitle: "Dine-in ₹1,120 • Online ₹860",
-      change: "—",
-      changeType: "neutral",
+      value: `₹${Math.round(metricsData.avgOrderValue || 0).toLocaleString()}`,
+      subtitle: "Avg. revenue per order",
+      ...getTrend(metricsData.trends?.avgOrderValue),
+      change: getTrend(metricsData.trends?.avgOrderValue).value,
       icon: (
         <svg
           className="w-6 h-6 text-purple-600"
@@ -85,11 +94,11 @@ const KeyMetricsCards = () => {
     },
     {
       id: 4,
-      title: "Fulfillment Rate",
-      value: "96.8%",
-      subtitle: "Failures reduced by 3%",
-      change: "+3%",
-      changeType: "positive",
+      title: "Completed Orders",
+      value: (metricsData.completedOrders || 0).toLocaleString(),
+      subtitle: "Successfully delivered",
+      ...getTrend(metricsData.trends?.completedOrders),
+      change: getTrend(metricsData.trends?.completedOrders).value,
       icon: (
         <svg
           className="w-6 h-6 text-yellow-600"

@@ -315,7 +315,7 @@ const KOTManagement = () => {
               {/* Take Order Button */}
               <button
                 onClick={handleTakeOrder}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors h-[40px]"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors h-[40px] w-[150px]"
               >
                 <FiPlus className="w-4 h-4" />
                 <span>Take Order</span>
@@ -325,7 +325,7 @@ const KOTManagement = () => {
               <button
                 onClick={loadKOTs}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-[150px]"
               >
                 <FiRefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>

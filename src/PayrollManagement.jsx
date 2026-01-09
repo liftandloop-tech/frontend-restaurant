@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Header,
   FilterBar,
@@ -9,6 +9,7 @@ import {
   DownloadReportButton,
   ActionBar,
 } from "./components/payroll-management-components";
+import { useGetAllStaffQuery } from "./features/staff/staffApiSlice";
 
 /**
  * Main PayrollManagement component
@@ -18,6 +19,43 @@ import {
 const PayrollManagement = () => {
   // State for managing selected staff members
   const [selectedStaff, setSelectedStaff] = useState([]);
+
+  // State for filters
+  const [selectedMonth, setSelectedMonth] = useState("December 2024");
+  const [selectedRole, setSelectedRole] = useState("All Roles");
+  const [selectedStatus, setSelectedStatus] = useState("All Status");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch staff data
+  const { data: staffResponse, isLoading } = useGetAllStaffQuery({ isActive: true });
+  // The API returns { data: { data: [...], pagination: {...} } }
+  const allStaff = staffResponse?.data?.data || [];
+
+  // Filter staff based on interactions
+  const filteredStaff = useMemo(() => {
+    return allStaff.filter(staff => {
+      // Role filter
+      if (selectedRole !== "All Roles" && staff.role !== selectedRole) {
+        return false;
+      }
+
+      // Search filter (name or phone)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const nameMatch = staff.fullName?.toLowerCase().includes(query);
+        const phoneMatch = staff.phoneNumber?.includes(query);
+        const usernameMatch = staff.username?.toLowerCase().includes(query);
+        if (!nameMatch && !phoneMatch && !usernameMatch) {
+          return false;
+        }
+      }
+
+      // Status filter - currently we mocking status, but we can implement logic later
+      // For now, if "All Status" is selected, show all.
+      // Since status isn't in backend yet, we can't effectively filter by it without mocking it on the fly.
+      return true;
+    });
+  }, [allStaff, selectedRole, searchQuery, selectedStatus]);
 
   // Handler for staff selection
   const handleStaffSelection = (staffIds) => {
@@ -50,6 +88,13 @@ const PayrollManagement = () => {
     setSelectedStaff([]);
   };
 
+  // Calculate total amount for selected staff
+  const calculateTotalPreview = () => {
+    return filteredStaff
+      .filter(s => selectedStaff.includes(s._id))
+      .reduce((sum, s) => sum + (s.baseSalary || 0), 0);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Container */}
@@ -58,7 +103,16 @@ const PayrollManagement = () => {
         <Header />
 
         {/* Filter Bar */}
-        <FilterBar />
+        <FilterBar
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+          selectedRole={selectedRole}
+          onRoleChange={setSelectedRole}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
         {/* Key Metrics Cards */}
         <KeyMetricsCards />
@@ -69,30 +123,17 @@ const PayrollManagement = () => {
           <div className="lg:col-span-3">
             {/* Staff Payroll Table */}
             <StaffPayrollTable
+              staffData={filteredStaff}
               selectedStaff={selectedStaff}
               onStaffSelection={handleStaffSelection}
               onSelectAll={handleSelectAll}
+              isLoading={isLoading}
             />
 
             {/* Action Bar */}
             <ActionBar
               selectedCount={selectedStaff.length}
-              totalAmount={
-                selectedStaff.length > 0
-                  ? selectedStaff.reduce((sum, id) => {
-                      // Calculate total amount based on selected staff
-                      // In a real app, this would come from the actual staff data
-                      const staffData = [
-                        { id: 1, finalPay: 27000 },
-                        { id: 2, finalPay: 21000 },
-                        { id: 3, finalPay: 16800 },
-                        { id: 4, finalPay: 16800 },
-                      ];
-                      const staff = staffData.find((s) => s.id === id);
-                      return sum + (staff ? staff.finalPay : 0);
-                    }, 0)
-                  : 0
-              }
+              totalAmount={calculateTotalPreview()}
               onCancel={handleCancel}
               onProcessBulkPayment={handleProcessBulkPayment}
             />

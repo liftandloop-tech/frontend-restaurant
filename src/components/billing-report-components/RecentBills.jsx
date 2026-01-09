@@ -42,7 +42,7 @@ const RecentBills = () => {
         cashier: bill.waiterId?.name || bill.waiterId?.fullName || "System",
         paymentMethod: pConfig.label,
         paymentIcon: pConfig.icon,
-        amount: `₹ ${bill.totalAmount.toLocaleString()}`,
+        amount: `₹ ${(bill.totalAmount || 0).toLocaleString()}`,
         originalId: bill._id,
       };
     });

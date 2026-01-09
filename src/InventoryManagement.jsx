@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Header, NavigationTabs, FilterDropdowns, StockOverviewTable, ItemDetailsPanel, VendorsTable, POTable, WastageTable } from "./components/inventory-management-components";
+import { Header, NavigationTabs, FilterDropdowns, StockOverviewTable, ItemDetailsPanel,
+   //VendorsTable, 
+   //POTable,
+  //  WastageTable
+   } from "./components/inventory-management-components";
 import AddStock from "./AddStock";
 import EditInventoryItem from "./EditInventoryItem";
 import {
@@ -7,9 +11,9 @@ import {
   useCreateInventoryItemMutation,
   useUpdateInventoryItemMutation,
   useDeleteInventoryItemMutation,
-  useGetVendorsQuery,
-  useGetPurchaseOrdersQuery,
-  useGetWastageQuery
+  //useGetVendorsQuery,
+  //useGetPurchaseOrdersQuery,
+  //useGetWastageQuery
 } from "./features/inventory/inventoryApiSlice";
 
 const InventoryManagement = () => {
@@ -30,15 +34,15 @@ const InventoryManagement = () => {
   const { data: inventoryQueryData, isLoading: inventoryLoading } = useGetInventoryItemsQuery(undefined, {
     skip: activeTab !== "Stock Overview"
   });
-  const { data: vendorsQueryData, isLoading: vendorsLoading } = useGetVendorsQuery(undefined, {
-    skip: activeTab !== "Vendors"
-  });
-  const { data: poQueryData, isLoading: poLoading } = useGetPurchaseOrdersQuery(undefined, {
-    skip: activeTab !== "Purchase Orders"
-  });
-  const { data: wastageQueryData, isLoading: wastageLoading } = useGetWastageQuery(undefined, {
-    skip: activeTab !== "Wastage & Adjustments"
-  });
+  // const { data: vendorsQueryData, isLoading: vendorsLoading } = useGetVendorsQuery(undefined, {
+  //   skip: activeTab !== "Vendors"
+  // });
+  // const { data: poQueryData, isLoading: poLoading } = useGetPurchaseOrdersQuery(undefined, {
+  //   skip: activeTab !== "Purchase Orders"
+  // });
+  // const { data: wastageQueryData, isLoading: wastageLoading } = useGetWastageQuery(undefined, {
+  //   skip: activeTab !== "Wastage & Adjustments"
+  // });
 
   const [createItemApi] = useCreateInventoryItemMutation();
   const [updateItemApi] = useUpdateInventoryItemMutation();
@@ -85,18 +89,20 @@ const InventoryManagement = () => {
         notes: item.notes,
         restaurantId: item.restaurantId
       }));
-    } else if (activeTab === "Vendors" && vendorsQueryData?.success) {
-      data = vendorsQueryData.data;
-    } else if (activeTab === "Purchase Orders" && poQueryData?.success) {
-      data = poQueryData.data;
-    } else if (activeTab === "Wastage & Adjustments" && wastageQueryData?.success) {
-      data = wastageQueryData.data;
     }
-    return data;
-  }, [activeTab, inventoryQueryData, vendorsQueryData, poQueryData, wastageQueryData]);
+    // } else if (activeTab === "Vendors" && vendorsQueryData?.success) {
+    //   data = vendorsQueryData.data;
+    // } else if (activeTab === "Purchase Orders" && poQueryData?.success) {
+    //   data = poQueryData.data;
+    // } else if (activeTab === "Wastage & Adjustments" && wastageQueryData?.success) {
+    //   data = wastageQueryData.data;
+    //  }
+  return data;
+  })
+  // [activeTab, inventoryQueryData, vendorsQueryData, poQueryData, wastageQueryData]);
 
   // Loading state mapping
-  const loading = inventoryLoading || vendorsLoading || poLoading || wastageLoading;
+  // const loading = inventoryLoading || vendorsLoading || poLoading || wastageLoading;
 
   // Handle tab changes
   const handleTabChange = (tabName) => {
@@ -195,7 +201,7 @@ const InventoryManagement = () => {
 
   // Render content based on active tab
   const renderTabContent = () => {
-    if (loading) return <div className="p-10 text-center">Loading {activeTab}...</div>;
+    // if (loading) return <div className="p-10 text-center">Loading {activeTab}...</div>;
     if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
 
     switch (activeTab) {
@@ -210,14 +216,14 @@ const InventoryManagement = () => {
             userRole={userRole}
           />
         );
-      case "Vendors":
-        return <VendorsTable data={inventoryData} />;
-      case "Purchase Orders":
-        return <POTable data={inventoryData} />;
-      case "Wastage & Adjustments":
-        return <WastageTable data={inventoryData} />;
-      default:
-        return <div>Content for {activeTab} coming soon...</div>;
+      // case "Vendors":
+      //   return <VendorsTable data={inventoryData} />;
+      // case "Purchase Orders":
+      //   return <POTable data={inventoryData} />;
+      // case "Wastage & Adjustments":
+      //   return <WastageTable data={inventoryData} />;
+      // default:
+      //   return <div>Content for {activeTab} coming soon...</div>;
     }
   };
 

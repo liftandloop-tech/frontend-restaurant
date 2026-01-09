@@ -4,25 +4,26 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         exportPDF: builder.query({
             query: (params) => ({
-                url: 'report/export/pdf',
+                url: 'reports/export/pdf',
                 params,
                 responseHandler: (response) => response.blob(),
             }),
         }),
         getDashboardStats: builder.query({
             query: (params) => ({
-                url: 'report/dashboard-stats',
+                url: 'reports/dashboard-stats',
                 params,
             }),
-            providesTags: ['Report'],
+            providesTags: ['Report', 'DashboardStats'],
+            keepUnusedDataFor: 0, // refetch immediately to ensure fresh data
         }),
         getScheduledReports: builder.query({
-            query: () => 'report/schedule',
+            query: () => 'reports/schedule',
             providesTags: ['Report'],
         }),
         createScheduledReport: builder.mutation({
             query: (data) => ({
-                url: 'report/schedule',
+                url: 'reports/schedule',
                 method: 'POST',
                 body: data,
             }),
@@ -30,7 +31,7 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
         }),
         updateScheduledReport: builder.mutation({
             query: ({ id, ...data }) => ({
-                url: `report/schedule/${id}`,
+                url: `reports/schedule/${id}`,
                 method: 'PUT',
                 body: data,
             }),
@@ -38,10 +39,81 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
         }),
         deleteScheduledReport: builder.mutation({
             query: (id) => ({
-                url: `report/schedule/${id}`,
+                url: `reports/schedule/${id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: ['Report'],
+        }),
+        getOrderReport: builder.query({
+            query: (params) => ({
+                url: 'reports/order',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getBillingReport: builder.query({
+            query: (params) => ({
+                url: 'reports/billing',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getStaffReport: builder.query({
+            query: (params) => ({
+                url: 'reports/staff',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getInventoryReport: builder.query({
+            query: (params) => ({
+                url: 'reports/inventory',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getMenuReport: builder.query({
+            query: (params) => ({
+                url: 'reports/menu',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getVendorReport: builder.query({
+            query: (params) => ({
+                url: 'reports/vendor',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getOfferReport: builder.query({
+            query: (params) => ({
+                url: 'reports/offer',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        getPurchaseReport: builder.query({
+            query: (params) => ({
+                url: 'reports/purchase',
+                params,
+            }),
+            providesTags: ['Report'],
+        }),
+        generateReport: builder.mutation({
+            query: (params) => ({
+                url: 'reports/generate',
+                method: 'POST',
+                body: params,
+            }),
+            invalidatesTags: ['ReportHistory'],
+        }),
+        getReportHistory: builder.query({
+            query: (params) => ({
+                url: 'reports/history',
+                params,
+            }),
+            providesTags: ['ReportHistory'],
         }),
     }),
 });
@@ -54,4 +126,14 @@ export const {
     useCreateScheduledReportMutation,
     useUpdateScheduledReportMutation,
     useDeleteScheduledReportMutation,
+    useGetOrderReportQuery,
+    useGetBillingReportQuery,
+    useGetStaffReportQuery,
+    useGetInventoryReportQuery,
+    useGetMenuReportQuery,
+    useGetVendorReportQuery,
+    useGetOfferReportQuery,
+    useGetPurchaseReportQuery,
+    useGenerateReportMutation,
+    useGetReportHistoryQuery,
 } = reportsApiSlice;

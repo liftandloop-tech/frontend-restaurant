@@ -1,15 +1,20 @@
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 
 /**
  * FilterBar component for Payroll Management
  * Contains month, role, status dropdowns, search input, and export button
  */
-const FilterBar = () => {
-  const [selectedMonth, setSelectedMonth] = useState("December 2024");
-  const [selectedRole, setSelectedRole] = useState("All Roles");
-  const [selectedStatus, setSelectedStatus] = useState("All Status");
-  const [searchQuery, setSearchQuery] = useState("");
-
+const FilterBar = ({
+  selectedMonth,
+  onMonthChange,
+  selectedRole,
+  onRoleChange,
+  selectedStatus,
+  onStatusChange,
+  searchQuery,
+  onSearchChange
+}) => {
   const months = [
     "December 2024",
     "November 2024",
@@ -19,7 +24,7 @@ const FilterBar = () => {
     "July 2024",
   ];
 
-  const roles = ["All Roles", "Chef", "Waiter", "Cashier", "Manager", "Host"];
+  const roles = ["All Roles", "Chef", "Waiter", "Cashier", "Manager", "Kitchen", "Bar", "Owner", "Delivery"];
 
   const statuses = ["All Status", "Paid", "Pending", "Processing"];
 
@@ -39,7 +44,7 @@ const FilterBar = () => {
           <div className="relative">
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => onMonthChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
             >
               {months.map((month) => (
@@ -74,7 +79,7 @@ const FilterBar = () => {
           <div className="relative">
             <select
               value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
+              onChange={(e) => onRoleChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
             >
               {roles.map((role) => (
@@ -109,7 +114,7 @@ const FilterBar = () => {
           <div className="relative">
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={(e) => onStatusChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white pr-8"
             >
               {statuses.map((status) => (
@@ -143,9 +148,9 @@ const FilterBar = () => {
           </label>
           <input
             type="text"
-            placeholder="Name or ID"
+            placeholder="Name, ID or Phone"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
@@ -175,6 +180,17 @@ const FilterBar = () => {
       </div>
     </div>
   );
+};
+
+FilterBar.propTypes = {
+  selectedMonth: PropTypes.string,
+  onMonthChange: PropTypes.func,
+  selectedRole: PropTypes.string,
+  onRoleChange: PropTypes.func,
+  selectedStatus: PropTypes.string,
+  onStatusChange: PropTypes.func,
+  searchQuery: PropTypes.string,
+  onSearchChange: PropTypes.func
 };
 
 export default FilterBar;

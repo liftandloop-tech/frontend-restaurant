@@ -51,6 +51,7 @@ const Header = () => {
                 <option value="Last 7 days">Last 7 days</option>
                 <option value="Last 30 days">Last 30 days</option>
                 <option value="This Quarter">This Quarter</option>
+                <option value="Last 6 Months">Last 6 Months</option>
                 <option value="Custom Range">Custom Range</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">

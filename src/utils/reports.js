@@ -57,3 +57,66 @@ export const deleteScheduledReport = async (reportId) => {
   const response = await api.delete(`reports/schedule/${reportId}`);
   return response;
 };
+/**
+ * Generate and save a report snapshot
+ * @param {object} filters - Report filters
+ * @returns {Promise} Response from backend
+ */
+export const generateReport = async (filters) => {
+  const response = await api.post('reports/generate', filters);
+  return response;
+};
+
+/**
+ * Get report history (archived reports)
+ * @param {object} filters - Optional filters
+ * @returns {Promise} Response from backend
+ */
+export const getReportHistory = async (filters = {}) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  const endpoint = queryParams ? `reports/history?${queryParams}` : 'reports/history';
+  const response = await api.get(endpoint);
+  return response;
+};
+
+// Specific Report Helpers
+
+export const getOrderReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/order?${queryParams}`);
+};
+
+export const getBillingReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/billing?${queryParams}`);
+};
+
+export const getStaffReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/staff?${queryParams}`);
+};
+
+export const getInventoryReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/inventory?${queryParams}`);
+};
+
+export const getMenuReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/menu?${queryParams}`);
+};
+
+export const getVendorReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/vendor?${queryParams}`);
+};
+
+export const getOfferReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/offer?${queryParams}`);
+};
+
+export const getPurchaseReport = async (filters) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return await api.get(`reports/purchase?${queryParams}`);
+};

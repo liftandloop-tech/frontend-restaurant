@@ -1,133 +1,127 @@
-// import React, { useState, useEffect } from "react";
-// import { generateLicense, getMyLicense } from "./utils/licenses";
-// import { Copy, Check, Key } from "lucide-react";
+import React, { useState } from 'react';
+import { api } from './utils/api';
+import { useNavigate } from 'react-router-dom';
 
-// const LicenseKey = () => {
-//   const [licenseKey, setLicenseKey] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-//   const [success, setSuccess] = useState("");
-//   const [copied, setCopied] = useState(false);
+const LicenseKey = () => {
+    const [licenseKey, setLicenseKey] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [status, setStatus] = useState(null); // 'success' | 'error' | null
+    const navigate = useNavigate();
 
-//   // Fetch license on component mount
-//   useEffect(() => {
-//     fetchLicense();
-//   }, []);
-  
+    const handleVerify = async (e) => {
+        e.preventDefault();
+        if (!licenseKey.trim()) return;
 
-//   const fetchLicense = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await getMyLicense();
-//       if (response.success && response.data) {
-//         setLicenseKey(response.data.licenseKey || "");
-//       } else {
-//         // No license exists yet - this is normal
-//         setLicenseKey("");
-//       }
-//     } catch (error) {
-//       console.error("Error fetching license:", error);
-//       // Only show error if it's not a 404 (license not found)
-//       if (error.status !== 404) {
-//         setError("Failed to fetch license. Please try again.");
-//       }
-//       // 404 is expected when no license exists, so we don't show error
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+        setIsLoading(true);
+        setMessage('');
+        setStatus(null);
 
-//   const handleGenerate = async () => {
-//     try {
-//       setLoading(true);
-//       setError("");
-//       setSuccess("");
-      
-//       const response = await generateLicense();
-//       if (response.success) {
-//         setLicenseKey(response.data.licenseKey);
-//         setSuccess("License key generated successfully!");
-//         setTimeout(() => setSuccess(""), 3000);
-//       }
-//     } catch (error) {
-//       setError(error.message || "Failed to generate license key");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+        try {
+            const response = await api.post('license/verify', { licenseKey });
 
-//   const handleCopy = () => {
-//     if (licenseKey) {
-//       navigator.clipboard.writeText(licenseKey);
-//       setCopied(true);
-//       setTimeout(() => setCopied(false), 2000);
-//     }
-//   };
+            if (response.success) {
+                setStatus('success');
+                setMessage(response.message || 'License verified successfully!');
+                // Update local storage or context if they store license status?
+                // For now, redirect to dashboard after a delay
+                setTimeout(() => {
+                    navigate('/');
+                }, 2000);
+            } else {
+                setStatus('error');
+                setMessage(response.message || 'Verification failed');
+            }
+        } catch (error) {
+            console.error('License verification error:', error);
+            setStatus('error');
+            setMessage(error.message || 'Failed to verify license. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-//   return (
-//     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-//       <div className="flex items-center gap-2 mb-4">
-//         <Key className="h-5 w-5 text-blue-600" />
-//         <h2 className="text-lg font-semibold text-gray-900">License Key</h2>
-//       </div>
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Activate License
+                    </h2>
+                    <p className="mt-2 text-center text-sm text-gray-600">
+                        Please enter your license key to activate your restaurant account.
+                    </p>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleVerify}>
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label htmlFor="license-key" className="sr-only">
+                                License Key
+                            </label>
+                            <input
+                                id="license-key"
+                                name="licenseKey"
+                                type="text"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                placeholder="Enter License Key (e.g. XXXX-XXXX-XXXX)"
+                                value={licenseKey}
+                                onChange={(e) => setLicenseKey(e.target.value)}
+                            />
+                        </div>
+                    </div>
 
-//       {error && (
-//         <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
-//           <p className="text-sm text-red-600">{error}</p>
-//         </div>
-//       )}
+                    {message && (
+                        <div
+                            className={`rounded-md p-4 ${status === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                }`}
+                        >
+                            <div className="flex">
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium">{message}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-//       {success && (
-//         <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-3">
-//           <p className="text-sm text-green-600">{success}</p>
-//         </div>
-//       )}
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${isLoading
+                                    ? 'bg-blue-400 cursor-not-allowed'
+                                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                                }`}
+                        >
+                            {isLoading ? (
+                                <svg
+                                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                            ) : null}
+                            {isLoading ? 'Verifying...' : 'Verify License'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
 
-//       {loading ? (
-//         <div className="text-center py-4 text-gray-500">Loading...</div>
-//       ) : licenseKey ? (
-//         <div className="space-y-4">
-//           <div className="flex items-center gap-2">
-//             <div className="flex-1 bg-gray-50 border border-gray-300 rounded-md px-4 py-3 font-mono text-sm">
-//               {licenseKey}
-//             </div>
-//             <button
-//               onClick={handleCopy}
-//               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
-//             >
-//               {copied ? (
-//                 <>
-//                   <Check className="h-4 w-4" />
-//                   Copied!
-//                 </>
-//               ) : (
-//                 <>
-//                   <Copy className="h-4 w-4" />
-//                   Copy
-//                 </>
-//               )}
-//             </button>
-//           </div>
-//           <p className="text-xs text-gray-500">
-//             Your unique license key. Keep it safe and secure.
-//           </p>
-//         </div>
-//       ) : (
-//         <div className="space-y-4">
-//           <p className="text-sm text-gray-600">
-//             You don't have a license key yet. Generate one to get started.
-//           </p>
-//           <button
-//             onClick={handleGenerate}
-//             disabled={loading}
-//             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
-//           >
-//             {loading ? "Generating..." : "Generate License Key"}
-//           </button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default LicenseKey;
+export default LicenseKey;

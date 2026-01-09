@@ -7,21 +7,22 @@ import { Link } from "react-router-dom";
  */
 const ReportCategories = () => {
   const categories = [
-    {
-      id: 1,
-      title: "Customer Report",
-      description: "Track new, returning & top-spending customers",
-      icon: (
-        <svg
-          className="w-8 h-8 text-blue-600"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-        </svg>
-      ),
-      bgColor: "bg-blue-50",
-    },
+    // {
+    //   id: 1,
+    //   title: "Customer Report",
+    //   description: "Track new, returning & top-spending customers",
+    //   icon: (
+    //     <svg
+    //       className="w-8 h-8 text-blue-600"
+    //       fill="currentColor"
+    //       viewBox="0 0 20 20"
+    //     >
+    //       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+    //     </svg>
+    //   ),
+    //   bgColor: "bg-blue-50",
+    //   link: "/reports/customer"
+    // },
     {
       id: 2,
       title: "Billing Report",
@@ -40,6 +41,7 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-green-50",
+      link: "/reports/billing"
     },
     {
       id: 3,
@@ -59,6 +61,7 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-blue-50",
+      link: "/reports/order"
     },
     {
       id: 4,
@@ -78,6 +81,7 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-orange-50",
+      link: "/reports/offers"
     },
     {
       id: 5,
@@ -97,38 +101,41 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-purple-50",
+      link: "/reports/inventory"
     },
-    {
-      id: 6,
-      title: "Purchase Order Report",
-      description: "Review vendor procurement & delivery delays",
-      icon: (
-        <svg
-          className="w-8 h-8 text-blue-600"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-        </svg>
-      ),
-      bgColor: "bg-blue-50",
-    },
-    {
-      id: 7,
-      title: "Vendor Report",
-      description: "Track vendor performance & payment dues",
-      icon: (
-        <svg
-          className="w-8 h-8 text-orange-600"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-          <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" />
-        </svg>
-      ),
-      bgColor: "bg-orange-50",
-    },
+    // {
+    //   id: 6,
+    //   title: "Purchase Order Report",
+    //   description: "Review vendor procurement & delivery delays",
+    //   icon: (
+    //     <svg
+    //       className="w-8 h-8 text-blue-600"
+    //       fill="currentColor"
+    //       viewBox="0 0 20 20"
+    //     >
+    //       <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+    //     </svg>
+    //   ),
+    //   bgColor: "bg-blue-50",
+    //   link: "/reports/purchase"
+    // },
+    // {
+    //   id: 7,
+    //   title: "Vendor Report",
+    //   description: "Track vendor performance & payment dues",
+    //   icon: (
+    //     <svg
+    //       className="w-8 h-8 text-orange-600"
+    //       fill="currentColor"
+    //       viewBox="0 0 20 20"
+    //     >
+    //       <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+    //       <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" />
+    //     </svg>
+    //   ),
+    //   bgColor: "bg-orange-50",
+    //   link: "/reports/vendors"
+    // },
     {
       id: 8,
       title: "Menu Report",
@@ -147,6 +154,7 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-green-50",
+      link: "/reports/menu"
     },
     {
       id: 9,
@@ -166,6 +174,7 @@ const ReportCategories = () => {
         </svg>
       ),
       bgColor: "bg-blue-50",
+      link: "/reports/staff"
     },
   ];
 
@@ -194,87 +203,26 @@ const ReportCategories = () => {
                 <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                   {category.description}
                 </p>
-                {category.id === 1 ? (
-                  <Link
-                    to="/reports/customer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200"
+
+                <Link
+                  to={category.link}
+                  className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200"
+                >
+                  View Report
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    View Report
-                    <svg
-                      className="w-4 h-4 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                ) : category.id === 2 ? (
-                  <Link
-                    to="/reports/billing"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200"
-                  >
-                    View Report
-                    <svg
-                      className="w-4 h-4 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                ) : category.id === 3 ? (
-                  <Link
-                    to="/reports/order"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200"
-                  >
-                    View Report
-                    <svg
-                      className="w-4 h-4 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                ) : (
-                  <a
-                    href="#"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200"
-                  >
-                    View Report
-                    <svg
-                      className="w-4 h-4 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </a>
-                )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
               </div>
             </div>
           </div>
@@ -306,5 +254,7 @@ const ReportCategories = () => {
     </div>
   );
 };
+
+
 
 export default ReportCategories;

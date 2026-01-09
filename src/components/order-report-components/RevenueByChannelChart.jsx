@@ -9,32 +9,20 @@ import React from "react";
  * - Y-axis with revenue labels
  * - Responsive design
  */
-const RevenueByChannelChart = () => {
-  const revenueData = [
-    {
-      channel: "Dine-in",
-      revenue: 750000,
-      color: "bg-blue-600",
-      height: "h-32",
-    },
-    {
-      channel: "Takeaway",
-      revenue: 320000,
-      color: "bg-blue-400",
-      height: "h-20",
-    },
-    {
-      channel: "Online",
-      revenue: 140000,
-      color: "bg-teal-500",
-      height: "h-12",
-    },
-  ];
+const RevenueByChannelChart = ({ data }) => {
+  const chartData = data?.charts?.revenueByChannel || [];
+
+  const revenueData = chartData.map((item, index) => ({
+    channel: item.name === 'Online' ? 'Phone' : item.name,
+    revenue: item.value || 0,
+    color: ["bg-blue-600", "bg-blue-400", "bg-teal-500", "bg-purple-500"][index % 4],
+    height: "h-32" // Base height class, dynamic inline style used below
+  })).sort((a, b) => b.revenue - a.revenue);
 
   const maxRevenue = Math.max(...revenueData.map((item) => item.revenue));
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 w-150 ">
       {/* Chart Title */}
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
         Revenue by Channel (₹)
@@ -44,17 +32,17 @@ const RevenueByChannelChart = () => {
       <div className="space-y-4">
         {/* Y-axis Labels */}
         <div className="flex justify-end space-x-4 text-xs text-gray-500 mb-2">
-          <span>₹7.5L</span>
-          <span>₹5L</span>
-          <span>₹2.5L</span>
+          <span>₹{(maxRevenue / 100000).toFixed(1)}L</span>
+          <span>₹{((maxRevenue * 0.66) / 100000).toFixed(1)}L</span>
+          <span>₹{((maxRevenue * 0.33) / 100000).toFixed(1)}L</span>
           <span>₹0L</span>
         </div>
 
         {/* Chart Area */}
         <div className="flex items-end justify-between space-x-4 h-40">
           {revenueData.map((item, index) => {
-            const heightPercentage = (item.revenue / maxRevenue) * 100;
-            const actualHeight = Math.max(heightPercentage * 1.2, 20); // Minimum height of 20%
+            const heightPercentage = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
+            const actualHeight = Math.max(heightPercentage * 1.2, item.revenue > 0 ? 20 : 0); // Minimum height only if revenue exists
 
             return (
               <div key={index} className="flex-1 flex flex-col items-center">
@@ -86,12 +74,20 @@ const RevenueByChannelChart = () => {
         <div className="flex justify-between text-sm text-gray-600">
           <span>
             Total Revenue:{" "}
-            <span className="font-semibold text-gray-900">₹12.1L</span>
+            <span className="font-semibold text-gray-900">
+              ₹{(data?.metrics?.totalRevenue ? (data.metrics.totalRevenue / 100000).toFixed(2) : "0")}L
+            </span>
           </span>
-          <span>
-            Dine-in leads with{" "}
-            <span className="font-semibold text-blue-600">62%</span> share
-          </span>
+          {revenueData.length > 0 && (
+            <span>
+              {revenueData[0].channel} leads with{" "}
+              <span className="font-semibold text-blue-600">
+                {data?.metrics?.totalRevenue > 0
+                  ? Math.round((revenueData[0].revenue / data.metrics.totalRevenue) * 100)
+                  : 0}%
+              </span> share
+            </span>
+          )}
         </div>
       </div>
     </div>

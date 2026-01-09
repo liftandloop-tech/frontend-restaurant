@@ -9,30 +9,26 @@ import React from "react";
  * - Growth indicator for online orders
  * - Responsive design
  */
-const OrdersByChannelChart = () => {
-  const channelData = [
-    {
-      name: "Dine-in",
-      percentage: 54.0,
-      color: "bg-blue-600",
-      textColor: "text-blue-600",
-    },
-    {
-      name: "Takeaway",
-      percentage: 27.0,
-      color: "bg-blue-400",
-      textColor: "text-blue-400",
-    },
-    {
-      name: "Online",
-      percentage: 19.0,
-      color: "bg-teal-500",
-      textColor: "text-teal-500",
-    },
-  ];
+const OrdersByChannelChart = ({ data }) => {
+  const chartData = data?.charts?.ordersByChannel || [];
+  const totalOrders = data?.metrics?.totalOrders || 0;
+
+  // Calculate percentages and assign colors
+  const colors = ["bg-blue-600", "bg-blue-400", "bg-teal-500", "bg-purple-500"];
+  const textColors = ["text-blue-600", "text-blue-400", "text-teal-500", "text-purple-500"];
+  const strokeColors = ["#2563eb", "#60a5fa", "#14b8a6", "#a855f7"];
+
+  const channelData = chartData.map((item, index) => ({
+    name: item.name === 'Online' ? 'Phone' : item.name,
+    percentage: totalOrders > 0 ? Math.round((item.value / totalOrders) * 100) : 0,
+    color: colors[index % colors.length],
+    textColor: textColors[index % textColors.length],
+    stroke: strokeColors[index % strokeColors.length],
+    value: item.value
+  })).sort((a, b) => b.value - a.value);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 w-145 ">
       {/* Chart Title */}
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
         Orders by Channel
@@ -57,50 +53,40 @@ const OrdersByChannelChart = () => {
               strokeWidth="8"
             />
 
-            {/* Dine-in Segment (54%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#2563eb"
-              strokeWidth="8"
-              strokeDasharray={`${54 * 2.51} 251`}
-              strokeDashoffset="0"
-              className="transition-all duration-1000 ease-out"
-            />
+            {/* Dynamic Segments */}
+            {channelData.map((item, index) => {
+              const circumference = 2 * Math.PI * 40; // ~251.327
+              const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
 
-            {/* Takeaway Segment (27%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#60a5fa"
-              strokeWidth="8"
-              strokeDasharray={`${27 * 2.51} 251`}
-              strokeDashoffset={`-${54 * 2.51}`}
-              className="transition-all duration-1000 ease-out"
-            />
+              // Calculate previous percentages sum for offset
+              const previousPercentage = channelData
+                .slice(0, index)
+                .reduce((sum, d) => sum + d.percentage, 0);
+              const strokeDashoffset = -((previousPercentage / 100) * circumference);
 
-            {/* Online Segment (19%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#14b8a6"
-              strokeWidth="8"
-              strokeDasharray={`${19 * 2.51} 251`}
-              strokeDashoffset={`-${(54 + 27) * 2.51}`}
-              className="transition-all duration-1000 ease-out"
-            />
+              return (
+                <circle
+                  key={index}
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke={item.stroke}
+                  strokeWidth="8"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-1000 ease-out"
+                />
+              );
+            })}
           </svg>
 
           {/* Center Text */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">1,240</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {totalOrders.toLocaleString()}
+              </div>
               <div className="text-sm text-gray-500">Total Orders</div>
             </div>
           </div>
@@ -128,7 +114,7 @@ const OrdersByChannelChart = () => {
       <div className="mt-6 pt-4 border-t border-gray-100">
         <p className="text-sm text-gray-600">
           <span className="font-medium text-teal-600">
-            Online growing fastest this quarter (+12%).
+            Phone orders growing fastest this quarter (+12%).
           </span>
         </p>
       </div>

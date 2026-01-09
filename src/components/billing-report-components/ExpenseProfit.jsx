@@ -10,15 +10,15 @@ import React from "react";
  * - Visual bar representation of expenses vs profit
  * - Responsive design with proper spacing
  */
-const ExpenseProfit = () => {
-  const totalExpenses = 840000;
-  const netProfit = 445000;
-  const totalRevenue = totalExpenses + netProfit;
-  const profitMargin = ((netProfit / totalRevenue) * 100).toFixed(1);
+const ExpenseProfit = ({ data }) => {
+  const totalExpenses = data?.metrics?.totalExpenses || 0;
+  const netProfit = data?.metrics?.netProfit || 0;
+  const totalRevenue = data?.metrics?.totalRevenue || (totalExpenses + netProfit);
+  const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
 
   // Calculate bar percentages
-  const expensePercentage = (totalExpenses / totalRevenue) * 100;
-  const profitPercentage = (netProfit / totalRevenue) * 100;
+  const expensePercentage = totalRevenue > 0 ? (totalExpenses / totalRevenue) * 100 : 0;
+  const profitPercentage = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
@@ -34,7 +34,7 @@ const ExpenseProfit = () => {
           </div>
           <div className="text-sm text-gray-600">Total Expenses</div>
           <div className="text-xs text-gray-500">
-            Includes vendor payments, staff payroll, and operational overhead.
+            Calculated from Purchase Orders.
           </div>
         </div>
 
@@ -43,7 +43,7 @@ const ExpenseProfit = () => {
           <div className="text-2xl font-bold text-gray-900">
             ₹ {netProfit.toLocaleString()}
           </div>
-          <div className="text-sm text-gray-600">Net Profit (est.)</div>
+          <div className="text-sm text-gray-600">Net Profit</div>
         </div>
 
         {/* Profit Margin */}
@@ -51,24 +51,6 @@ const ExpenseProfit = () => {
           <div className="flex items-center gap-2">
             <div className="text-2xl font-bold text-gray-900">
               {profitMargin}%
-            </div>
-            <div className="flex items-center gap-1">
-              <svg
-                className="w-4 h-4 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 17l9.2-9.2M17 17V7H7"
-                />
-              </svg>
-              <span className="text-sm font-medium text-green-600">
-                2.1% MoM
-              </span>
             </div>
           </div>
           <div className="text-sm text-gray-600">Profit Margin</div>
@@ -83,17 +65,17 @@ const ExpenseProfit = () => {
             <div className="h-full flex">
               {/* Expenses portion */}
               <div
-                className="bg-green-700 flex items-center justify-end pr-2"
+                className="bg-red-500 flex items-center justify-end pr-2"
                 style={{ width: `${expensePercentage}%` }}
               >
-                <span className="text-xs font-medium text-white">Expenses</span>
+                {expensePercentage > 10 && <span className="text-xs font-medium text-white">Exps</span>}
               </div>
               {/* Profit portion */}
               <div
-                className="bg-green-400 flex items-center justify-start pl-2"
+                className="bg-green-500 flex items-center justify-start pl-2"
                 style={{ width: `${profitPercentage}%` }}
               >
-                <span className="text-xs font-medium text-white">Profit</span>
+                {profitPercentage > 10 && <span className="text-xs font-medium text-white">Profit</span>}
               </div>
             </div>
           </div>
