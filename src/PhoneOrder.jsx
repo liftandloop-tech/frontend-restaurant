@@ -51,7 +51,7 @@ const PhoneOrder = ({ show, onClose }) => {
     // Use utility functions to compute all totals, for maintainability
     const subtotal = getSubtotal(orderItems);
     const tax = getTax(subtotal);
-    const serviceChargeResult = getServiceCharge(subtotal);
+    const serviceChargeResult = 0; // Service charge disabled: getServiceCharge(subtotal);
 
     // Calculate discount
     let discountAmount = 0;

@@ -6,7 +6,9 @@ import OrderSummary from "./components/change-order-components/OrderSummary";
 import Footer from "./components/change-order-components/Footer";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
 import { useUpdateOrderMutation } from "./features/orders/ordersApiSlice";
-import { useCreateKOTMutation } from "./features/kots/kotsApiSlice";
+import { useCreateKOTMutation, useMarkKOTPrintedMutation } from "./features/kots/kotsApiSlice";
+import { openWhatsAppChat } from "./utils/whatsapp";
+import { useGetAllStaffQuery } from "./features/staff/staffApiSlice";
 
 const mapOrderItems = (items) =>
   Array.isArray(items)
@@ -46,6 +48,53 @@ const ChangeOrder = ({
 
   const [updateOrderApi] = useUpdateOrderMutation();
   const [createKOTApi] = useCreateKOTMutation();
+  const [markKOTPrinted] = useMarkKOTPrintedMutation();
+  const { data: staffData } = useGetAllStaffQuery();
+  const waiters = staffData?.data || [];
+
+  const printKOT = (orderData, kotItems) => {
+    const printWindow = window.open('', '_blank', 'width=300,height=600');
+    if (!printWindow) return;
+
+    const itemsHtml = kotItems.map(item => `
+        <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+          <span>${item.name} x${item.qty || item.quantity}</span>
+        </div>
+        ${item.specialInstructions ? `<div style="font-size: 12px; font-style: italic;">Note: ${item.specialInstructions}</div>` : ''}
+      `).join('');
+
+    const html = `
+        <html>
+          <head>
+            <style>
+              body { font-family: monospace; padding: 10px; max-width: 300px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+              .footer { text-align: center; border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h3>KITCHEN ORDER TICKET (UPDATED)</h3>
+              <p>Table: ${orderData.tableNumber}</p>
+              <p>Date: ${new Date().toLocaleString()}</p>
+              <p>Order #: ${orderData._id?.slice(-6) || 'N/A'}</p>
+            </div>
+            <div>
+              ${itemsHtml}
+            </div>
+            <div class="footer">
+              <p>Printed: ${new Date().toLocaleTimeString()}</p>
+            </div>
+          </body>
+        </html>
+      `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
 
   useEffect(() => {
     if (show) {
@@ -58,7 +107,7 @@ const ChangeOrder = ({
   useEffect(() => {
     const subtotal = getSubtotal(orderItems);
     const tax = getTax(subtotal);
-    const serviceCharge = getServiceCharge(subtotal);
+    const serviceCharge = 0; // Service charge disabled: getServiceCharge(subtotal);
     const total = getTotal(subtotal, tax, serviceCharge);
     setTotals({ subtotal, tax, serviceCharge, total });
   }, [orderItems]);
@@ -147,8 +196,38 @@ const ChangeOrder = ({
         const kotPromises = selectedStations.map((station) =>
           createKOTApi({ orderId: orderMeta.id, station }).unwrap()
         );
-        await Promise.all(kotPromises);
+        const kotResults = await Promise.all(kotPromises);
         setSuccess(`Order updated and KOTs sent to: ${selectedStations.join(", ")}`);
+
+        // Handle Printing and WhatsApp
+        // Print KOT
+        printKOT({ ...orderMeta, tableNumber: table?.tableNumber || "N/A" }, orderItems);
+
+        // Mark all created KOTs as printed
+        if (kotResults && kotResults.length > 0) {
+          for (const kotResult of kotResults) {
+            const kotData = kotResult?.data || kotResult;
+            if (kotData && kotData._id) {
+              try {
+                await markKOTPrinted(kotData._id).unwrap();
+              } catch (err) {
+                console.warn("Failed to mark KOT as printed:", err);
+              }
+            }
+          }
+        }
+
+        // Send WhatsApp to Waiter
+        if (selectedWaiterId) {
+          const waiter = waiters.find(w => (w._id === selectedWaiterId || w.id === selectedWaiterId));
+          if (waiter && waiter.phone) {
+            const kotItemsList = orderItems.map(i => `${i.name} x${i.quantity}`).join('\n');
+            const message = `KOT Update Alert!\nTable: ${table?.tableNumber || "N/A"}\nOrder #${orderMeta.id?.slice(-6)}\n\nItems:\n${kotItemsList}\n\nPlease attend to this order.`;
+
+            // Open WhatsApp chat
+            openWhatsAppChat(waiter.phone, message);
+          }
+        }
       } catch (kotError) {
         console.error("Error creating KOTs:", kotError);
         // Still show success for order update, but warn about KOT

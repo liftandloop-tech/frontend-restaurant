@@ -8,29 +8,6 @@ import Header from "./Header";
 import Login from "./Login";
 import Register from "./Register";
 
-// Lazy load all other components for better performance
-// const Dashboard = React.lazy(() => import("./Dashboard"));
-// const RestaurantTables = React.lazy(() => import("./RestaurantTables"));
-// const TakeOrder = React.lazy(() => import("./TakeOrder"));
-// const ChangeOrder = React.lazy(() => import("./ChangeOrder"));
-// const CloseTable = React.lazy(() => import("./CloseTable"));
-// const OrderManagement = React.lazy(() => import("./OrderManagement"));
-// const NewOrder = React.lazy(() => import("./NewOrder"));
-// const OnlineOrder = React.lazy(() => import("./OnlineOrder"));
-// const Reservations = React.lazy(() => import("./Reservations"));
-// const AddReservation = React.lazy(() => import("./AddReservation"));
-// const AllReservations = React.lazy(() => import("./AllReservations"));
-// const MenuManagement = React.lazy(() => import("./MenuManagement"));
-// const InventoryManagement = React.lazy(() => import("./InventoryManagement"));
-// const StaffManagement = React.lazy(() => import("./StaffManagement"));
-// const PayrollManagement = React.lazy(() => import("./PayrollManagement"));
-// const StaffDetails = React.lazy(() => import("./StaffDetails"));
-// const ReportsDashboard = React.lazy(() => import("./ReportsDashboard"));
-// const CustomerReport = React.lazy(() => import("./CustomerReport"));
-// const BillingReport = React.lazy(() => import("./BillingReport"));
-// const OrderReport = React.lazy(() => import("./OrderReport"));
-// const Offers = React.lazy(() => import("./Offers"));
-// const Profile = React.lazy(() => import("./Profile"));
 
 const Dashboard = React.lazy(() => import("./Dashboard"))
 const TakeOrder = React.lazy(() => import("./TakeOrder"))
@@ -65,7 +42,8 @@ const StaffReport = React.lazy(() => import("./StaffReport"))
 const VendorReport = React.lazy(() => import("./VendorReport"))
 const PurchaseReport = React.lazy(() => import("./PurchaseReport"))
 const OfferReport = React.lazy(() => import("./OfferReport"))
-const LicenseKey = React.lazy(() => import("./LicenseKey"))
+// const ActivateLicense = React.lazy(() => import("./ActivateLicense"));
+import { useAuth } from "./context/AuthContext";
 
 
 import Sidebar from "./components/Sidebar.jsx";
@@ -80,6 +58,7 @@ const LoadingSpinner = () => (
 
 
 
+
 /**
  * The main App component sets up the application's routing and global state.
  * It manages the visibility of the "Take Order" modal, allowing it to be
@@ -87,123 +66,81 @@ const LoadingSpinner = () => (
  * It also handles authentication state and routing.
  */
 const App = () => {
-  // Authentication state - check localStorage on mount
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return checkAuth();
-
-  });
+  const { isAuthenticated, isLoading,
+    // isLicenseVerified,
+    login, logout } = useAuth();
 
   // State to control sidebar collapse state for layout padding
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // State to control the visibility of the TakeOrder modal.
+  // TakeOrder states...
   const [isTakeOrderVisible, setIsTakeOrderVisible] = useState(false);
   const [isChangeOrderVisible, setIsChangeOrderVisible] = useState(false);
   const [isPhoneOrderVisible, setIsPhoneOrderVisible] = useState(false);
   const [isOnlineDeliveryOrderVisible, setIsOnlineDeliveryOrderVisible] = useState(false);
+  const [takeOrderTableNumber, setTakeOrderTableNumber] = useState("");
 
-
-  // Handlers are memoized with useCallback to prevent unnecessary re-renders of child components.
-  const handleOpenTakeOrder = React.useCallback(
-    () => setIsTakeOrderVisible(true),
-    []
-  );
-  const handleCloseTakeOrder = React.useCallback(
-    () => setIsTakeOrderVisible(false),
-    []
-  );
-  // handleOpenChangeOrder removed as it was unused
-  const handleCloseChangeOrder = React.useCallback(
-    () => setIsChangeOrderVisible(false),
-    []
-  );
-  const handleOpenPhoneOrder = React.useCallback(
-    () => setIsPhoneOrderVisible(true),
-    []
-  );
-  const handleClosePhoneOrder = React.useCallback(
-    () => setIsPhoneOrderVisible(false),
-    []
-  );
-  const handleOpenOnlineDeliveryOrder = React.useCallback(
-    () => setIsOnlineDeliveryOrderVisible(true),
-    []
-  );
-  const handleCloseOnlineDeliveryOrder = React.useCallback(
-    () => setIsOnlineDeliveryOrderVisible(false),
-    []
-  );
+  // Handlers...
+  const handleOpenTakeOrder = React.useCallback((tableData) => {
+    if (tableData && tableData.tableNumber) setTakeOrderTableNumber(tableData.tableNumber);
+    else setTakeOrderTableNumber("");
+    setIsTakeOrderVisible(true);
+  }, []);
+  const handleCloseTakeOrder = React.useCallback(() => setIsTakeOrderVisible(false), []);
+  const handleCloseChangeOrder = React.useCallback(() => setIsChangeOrderVisible(false), []);
+  const handleOpenPhoneOrder = React.useCallback(() => setIsPhoneOrderVisible(true), []);
+  const handleClosePhoneOrder = React.useCallback(() => setIsPhoneOrderVisible(false), []);
+  const handleOpenOnlineDeliveryOrder = React.useCallback(() => setIsOnlineDeliveryOrderVisible(true), []);
+  const handleCloseOnlineDeliveryOrder = React.useCallback(() => setIsOnlineDeliveryOrderVisible(false), []);
 
   // Handle login
   const handleLogin = React.useCallback((userData) => {
-    console.log('handleLogin called with userData:', userData);
-    console.log('Current localStorage before handleLogin:', {
-      authToken: !!localStorage.getItem("authToken"),
-      refreshToken: !!localStorage.getItem("refreshToken"),
-      isAuthenticated: localStorage.getItem("isAuthenticated")
-    });
-
-    // Tokens should already be set by auth.js login function
-    // Just update the React state and localStorage flag
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("userData", JSON.stringify(userData));
-    setIsAuthenticated(true);
-
-    console.log('After handleLogin, localStorage:', {
-      authToken: !!localStorage.getItem("authToken"),
-      refreshToken: !!localStorage.getItem("refreshToken"),
-      isAuthenticated: localStorage.getItem("isAuthenticated")
-    });
-  }, []);
+    login(userData);
+  }, [login]);
 
   // Handle register
   const handleRegister = React.useCallback((userData) => {
-    //console.log("Registration successfull,pleaswe login to continue")
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("userData", JSON.stringify(userData));
-    setIsAuthenticated(true);
-  }, []);
+    login(userData);
+  }, [login]);
 
   // Handle logout
-  const handleLogout = React.useCallback(async () => {
-    try {
-      // Import logout function dynamically to avoid circular dependencies
-      const { logout } = await import("./utils/auth");
-      await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      // Always clear local data
-      clearAuthData();
-      setIsAuthenticated(false);
-    }
-  }, []);
+  const handleLogout = React.useCallback(() => {
+    logout();
+  }, [logout]);
 
   // Protected Route Component
   const ProtectedRoute = ({ children }) => {
-    // Check both React state and localStorage for authentication
-    const isAuthFromState = isAuthenticated;
-    const isAuthFromStorage = localStorage.getItem("isAuthenticated") === "true" &&
-      localStorage.getItem("authToken") &&
-      localStorage.getItem("refreshToken");
+    if (isLoading) return <LoadingSpinner />;
 
-    console.log('ProtectedRoute check:', {
-      isAuthFromState,
-      isAuthFromStorage,
-      willRedirect: !isAuthFromState && !isAuthFromStorage
-    });
-
-    if (!isAuthFromState && !isAuthFromStorage) {
+    if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
+
+    //License check
+    // License check - Commented out to bypass license verification for now
+    // if (!isLicenseVerified) {
+    //   return <Navigate to="/activate-license" replace />;
+    // }
+
     return children;
   };
 
   // Public Route Component (redirect to dashboard if already authenticated)
   const PublicRoute = ({ children }) => {
+    if (isLoading) return <LoadingSpinner />;
+
     if (isAuthenticated) {
+      // if (!isLicenseVerified) return <Navigate to="/activate-license" replace />;
       return <Navigate to="/" replace />;
     }
+    return children;
+  };
+
+  // License Route Component (accessible if auth but not verified)
+  const LicenseRoute = ({ children }) => {
+    if (isLoading) return <LoadingSpinner />;
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (isLicenseVerified) return <Navigate to="/" replace />;
     return children;
   };
 
@@ -474,14 +411,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/license"
-                element={
-                  <ProtectedRoute>
-                    <LicenseKey />
-                  </ProtectedRoute>
-                }
-              />
+
               <Route
                 path="/kots"
                 element={
@@ -530,7 +460,12 @@ const App = () => {
           {/* The TakeOrder modal is rendered here and controlled by the App's state */}
           {isTakeOrderVisible && (
             <Suspense fallback={<LoadingSpinner />}>
-              <TakeOrder show={isTakeOrderVisible} onClose={handleCloseTakeOrder} />
+              <TakeOrder
+                show={isTakeOrderVisible}
+                onClose={handleCloseTakeOrder}
+                tableNumber={takeOrderTableNumber}
+                isSidebarCollapsed={isSidebarCollapsed}
+              />
             </Suspense>
           )}
           {isChangeOrderVisible && (

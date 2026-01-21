@@ -48,17 +48,17 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
                         localStorage.setItem('authToken', newToken);
                         result = await baseQuery(args, api, extraOptions);
                     } else {
-                        handleLogout();
+                        // handleLogout();
                     }
                 } else {
-                    handleLogout();
+                    // handleLogout();
                 }
             } catch (error) {
                 console.error("Token refresh failed:", error);
-                handleLogout();
+                // handleLogout();
             }
         } else {
-            handleLogout();
+            // handleLogout();
         }
     }
     return result;
@@ -69,9 +69,9 @@ const handleLogout = () => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('isAuthenticated');
-    if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-    }
+    // if (typeof window !== 'undefined') {
+    //     window.location.href = '/login';
+    // }
 };
 
 export const apiSlice = createApi({

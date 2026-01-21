@@ -41,11 +41,11 @@ const TableCard = ({ table, onNewOrder }) => {
             onClick={() => onNewOrder(table)}
             className={`bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md text-[11px] font-medium transition flex-1`}
           >
-            New Order
+            Take Order
           </button>
         )}
         <button className={`border border-${statusColor}-500 text-${statusColor}-500 hover:bg-${statusColor}-100 px-3 py-2 rounded-md text-[11px] font-medium transition flex-1`}>
-          {table.status === 'reserved' ? 'View' : 'Reserve'}
+          {table.status === 'reserved' ? 'View' : 'Available'}
         </button>
       </div>
     </div>
@@ -90,7 +90,7 @@ const TableStatus = ({ onTakeOrder }) => {
           >
             <div className="flex items-center gap-2 justify-center">
               <AiOutlinePlus size={14} color="white" />
-              <h3 className="text-white">New Order</h3>
+              <h3 className="text-white">Take Order</h3>
             </div>
           </button>
           <button

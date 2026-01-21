@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 const OrderCalculation = ({ totals, discount }) => {
-  const [serviceChargeEnabled, setServiceChargeEnabled] = useState(true);
+  // const [serviceChargeEnabled, setServiceChargeEnabled] = useState(true);
 
   const { subtotal, tax, serviceCharge, discount: discountAmount = 0, total: calculatedTotal } = totals;
   // Use the calculated total from parent (which includes discount)
-  const total = calculatedTotal || (subtotal + tax + (serviceChargeEnabled ? serviceCharge : 0) - discountAmount);
+  const total = calculatedTotal || (subtotal + tax +
+    // (serviceChargeEnabled ? serviceCharge : 0)
+    - discountAmount);
 
   return (
     <div className="border-t border-gray-200 pt-4 space-y-2">
@@ -28,7 +30,7 @@ const OrderCalculation = ({ totals, discount }) => {
         <span>SGST</span>
         <span>₹{(tax / 2).toFixed(2)}</span>
       </div>
-      <div className="flex justify-between text-sm text-gray-600 items-center">
+      {/* <div className="flex justify-between text-sm text-gray-600 items-center">
         <div>
           <span>Service Charge</span>
           <span className="text-xs ml-1">(15%)</span>
@@ -58,7 +60,7 @@ const OrderCalculation = ({ totals, discount }) => {
           </label>
           <span>₹{serviceCharge.toFixed(2)}</span>
         </div>
-      </div>
+      </div> */}
       <div className="flex justify-between font-bold text-lg text-gray-800 pt-7 border-t border-gray-200 mt-1">
         <span>Total</span>
         <span>₹{total.toFixed(2)}</span>
@@ -71,7 +73,7 @@ OrderCalculation.propTypes = {
   totals: PropTypes.shape({
     subtotal: PropTypes.number.isRequired,
     tax: PropTypes.number.isRequired,
-    serviceCharge: PropTypes.number.isRequired,
+    // serviceCharge: PropTypes.number.isRequired,
   }).isRequired,
 };
 

@@ -4,30 +4,28 @@ import React from "react";
  * TopEarners component displays the list of top-earning staff members
  * Shows staff avatar, name, and their final pay amount
  */
-const TopEarners = () => {
-  const topEarners = [
-    {
-      id: 1,
-      name: "Alex Johnson",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      finalPay: 27000,
-    },
-    {
-      id: 2,
-      name: "Sarah Chen",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-      finalPay: 21000,
-    },
-    {
-      id: 3,
-      name: "Emma Wilson",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      finalPay: 16800,
-    },
-  ];
+const TopEarners = ({ staff = [] }) => {
+  // Sort by salary descending and take top 3
+  const topEarners = [...staff]
+    .sort((a, b) => (b.baseSalary || 0) - (a.baseSalary || 0))
+    .slice(0, 3)
+    .map(s => ({
+      id: s._id || s.id,
+      name: s.fullName || s.name,
+      avatar: s.profilePicture || null,
+      finalPay: s.baseSalary || 0
+    }));
+
+  if (topEarners.length === 0) {
+    // Show message or skeleton? Or just nothing.
+    // If empty, let's just show an empty state or nothing
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Earners</h3>
+        <p className="text-gray-500 text-sm">No data available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -41,11 +39,17 @@ const TopEarners = () => {
             <div className="flex items-center">
               {/* Avatar */}
               <div className="flex-shrink-0 h-8 w-8">
-                <img
-                  className="h-8 w-8 rounded-full object-cover"
-                  src={earner.avatar}
-                  alt={earner.name}
-                />
+                {earner.avatar ? (
+                  <img
+                    className="h-8 w-8 rounded-full object-cover"
+                    src={earner.avatar}
+                    alt={earner.name}
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                    {earner.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               {/* Name */}

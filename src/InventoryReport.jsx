@@ -1,16 +1,30 @@
 import React, { useState } from "react";
-import { useGetDashboardStatsQuery } from "./features/reports/reportsApiSlice";
-import { Header, Footer } from "./components/reports-dashboard-components";
+import { useGetDashboardStatsQuery, useCreateScheduledReportMutation } from "./features/reports/reportsApiSlice";
+import { Header, Footer, ScheduleReportModal } from "./components/reports-dashboard-components";
 
 const InventoryReport = () => {
     const [dateRange, setDateRange] = useState('This Month');
     const [branch, setBranch] = useState('All Branches');
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+    const [createScheduledReport] = useCreateScheduledReportMutation();
 
     const { data: reportResponse, isLoading } = useGetDashboardStatsQuery({
         reportType: 'inventory',
         dateRange,
         branch
     });
+
+    const handleSchedule = async (reportData) => {
+        try {
+            await createScheduledReport(reportData).unwrap();
+            alert("Report scheduled successfully!");
+            setIsScheduleModalOpen(false);
+        } catch (error) {
+            console.error("Failed to schedule report:", error);
+            alert("Failed to schedule report. Please try again.");
+        }
+    };
 
     const reportData = reportResponse?.success ? reportResponse.data : null;
     const metrics = reportData?.metrics || {};
@@ -32,6 +46,7 @@ const InventoryReport = () => {
                     setDateRange={setDateRange}
                     branch={branch}
                     setBranch={setBranch}
+                    onScheduleReport={() => setIsScheduleModalOpen(true)}
                 />
 
                 <h1 className="text-2xl font-bold text-gray-900 mb-6">Inventory Report</h1>
@@ -88,6 +103,12 @@ const InventoryReport = () => {
                 <div className="mt-8">
                     <Footer />
                 </div>
+
+                <ScheduleReportModal
+                    isOpen={isScheduleModalOpen}
+                    onClose={() => setIsScheduleModalOpen(false)}
+                    onSchedule={handleSchedule}
+                />
             </div>
         </div>
     );

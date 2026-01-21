@@ -8,7 +8,7 @@ import {
   BusinessProfileHeader,
   OwnerInformation,
   BusinessInformation,
-  LicenseSubscription,
+  // LicenseSubscription,
   AccountSecurity,
   RecentActivityLog,
   ActionButtons,
@@ -373,38 +373,7 @@ const Profile = () => {
           businessData={profileData.business}
           onManageBranches={handleManageBranches}
         />
-
-        <LicenseSubscription
-          licenseData={profileData.license}
-          onCopyKey={handleCopyKey}
-          onRenewLicense={handleRenewLicense}
-          onUpgradePlan={handleUpgradePlan}
-          onVerifyLicense={async (key) => {
-            try {
-              const res = await api.post('/license/verify', { licenseKey: key });
-              if (res.success) {
-                showNotification("License verified and activated successfully!", "success");
-                setProfileData(prev => ({
-                  ...prev,
-                  license: {
-                    ...prev.license,
-                    status: "Active",
-                    licenseKey: key,
-                    plan: res.data?.plan || prev.license.plan,
-                    expiryDate: res.data?.expiryDate ? new Date(res.data.expiryDate).toLocaleDateString() : prev.license.expiryDate
-                  }
-                }));
-                addActivity("Activated License", "License");
-                return true;
-              }
-              return false;
-            } catch (error) {
-              console.error(error);
-              showNotification(error.response?.data?.message || "License verification failed", "error");
-              return false;
-            }
-          }}
-        />
+        
 
         <AccountSecurity
           accountData={profileData.account}

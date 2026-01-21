@@ -1,16 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getStaffStats } from "../../utils/staff";
 
 /**
  * KeyMetricsCards component displays 4 KPI cards with payroll statistics
  * Shows total staff paid, total payroll expense, pending payments, and average salary
  */
 const KeyMetricsCards = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await getStaffStats();
+        // Check both direct response and {success, data} pattern
+        if (response.success) {
+          setStats(response.data);
+        } else if (response.totalStaff !== undefined) {
+          setStats(response);
+        }
+      } catch (error) {
+        console.error("Error fetching staff stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const totalStaff = stats?.totalStaff || 0;
+  const activeStaff = stats?.activeStaff || 0;
+  const totalPayroll = stats?.totalPayroll || 0;
+  const avgSalary = activeStaff > 0 ? Math.round(totalPayroll / activeStaff) : 0;
+
   const metrics = [
     {
       id: 1,
-      title: "Total Staff Paid",
-      value: "9 / 12",
-      badge: "75%",
+      title: "Active Staff",
+      value: loading ? "..." : `${activeStaff} / ${totalStaff}`,
+      badge: totalStaff > 0 ? `${Math.round((activeStaff / totalStaff) * 100)}%` : "0%",
       badgeColor: "bg-green-100 text-green-800",
       icon: (
         <svg
@@ -23,7 +51,7 @@ const KeyMetricsCards = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
           />
         </svg>
       ),
@@ -32,8 +60,8 @@ const KeyMetricsCards = () => {
     {
       id: 2,
       title: "Total Payroll Expense",
-      value: "₹2,45,000",
-      badge: "+12%",
+      value: loading ? "..." : `₹${totalPayroll.toLocaleString()}`,
+      badge: "Monthly",
       badgeColor: "bg-green-100 text-green-800",
       icon: (
         <svg
@@ -55,9 +83,9 @@ const KeyMetricsCards = () => {
     {
       id: 3,
       title: "Pending Payments",
-      value: "₹35,000",
-      badge: "3 pending",
-      badgeColor: "bg-orange-100 text-orange-800",
+      value: "₹0",
+      badge: "0 pending",
+      badgeColor: "bg-gray-100 text-gray-800",
       icon: (
         <svg
           className="w-8 h-8 text-orange-500"
@@ -78,7 +106,7 @@ const KeyMetricsCards = () => {
     {
       id: 4,
       title: "Average Salary",
-      value: "₹20,400",
+      value: loading ? "..." : `₹${avgSalary.toLocaleString()}`,
       badge: "Avg",
       badgeColor: "bg-blue-100 text-blue-800",
       icon: (

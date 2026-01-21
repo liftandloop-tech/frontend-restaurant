@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, loading, error, success }) => {
+const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, orderType = "takeaway", loading, error, success }) => {
   const [serviceChargeEnabled, setServiceChargeEnabled] = useState(false);
   const updateQuantity = (id, newQty) => {
     if (newQty <= 0) {
@@ -23,8 +23,8 @@ const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, loading, error, su
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-900">Order Cart</h3>
-        <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1.5 rounded-full font-medium">
-          Takeaway
+        <span className={`${orderType === 'phone' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-sm px-3 py-1.5 rounded-full font-medium capitalize`}>
+          {orderType === 'takeaway' ? 'Takeaway' : orderType === 'phone' ? 'Phone Order' : orderType}
         </span>
       </div>
 
@@ -179,7 +179,7 @@ const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, loading, error, su
                   clipRule="evenodd"
                 />
               </svg>
-              Confirm Order
+              Confirm Order & send KOT WA
             </>
           )}
         </button>

@@ -139,10 +139,10 @@ const OrderSummary = ({
                   customer.phone.includes(customerSearchTerm || '')
                 )
                 .map((customer) => (
-                <option key={customer._id || customer.id} value={customer._id || customer.id}>
-                  {customer.name} - {customer.phone}
-                </option>
-              ))}
+                  <option key={customer._id || customer.id} value={customer._id || customer.id}>
+                    {customer.name} - {customer.phone}
+                  </option>
+                ))}
             </select>
             {selectedCustomerId && (
               <div className="mt-2 p-2 bg-blue-50 rounded-md">

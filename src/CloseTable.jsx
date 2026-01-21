@@ -12,6 +12,7 @@ import ReceiptOptions from "./components/close-table-components/ReceiptOptions";
 import FooterBar from "./components/close-table-components/FooterBar";
 import { TAX_RATE, SERVICE_CHARGE_RATE } from "./utils/constants";
 import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
+import { openWhatsAppChat } from "./utils/whatsapp";
 import { useGetOrderByIdQuery, useGetOrdersQuery, useUpdateOrderStatusMutation } from "./features/orders/ordersApiSlice";
 import { useCreateBillMutation, useProcessPaymentMutation } from "./features/bills/billsApiSlice";
 import { useUpdateTableStatusMutation, useGetTablesQuery } from "./features/tables/tablesApiSlice";
@@ -152,7 +153,7 @@ const CloseTable = () => {
       const subtotal = order.subtotal || getSubtotal(items);
       const taxAmount = order.tax || getTax(subtotal, discount);
       const tax = includeTax ? taxAmount : 0;
-      const serviceChargeResult = includeServiceCharge ? getServiceCharge(subtotal, includeServiceCharge) : 0;
+      const serviceChargeResult = 0; // Service charge disabled: includeServiceCharge ? getServiceCharge(subtotal, includeServiceCharge) : 0;
       const totalPayable = subtotal - discount + tax + serviceChargeResult + tipAmount;
       return { subtotal, tax, serviceCharge: serviceChargeResult, totalPayable };
     }
@@ -161,7 +162,7 @@ const CloseTable = () => {
     const subtotal = getSubtotal(items);
     const taxAmount = getTax(subtotal, discount);
     const tax = includeTax ? taxAmount : 0;
-    const serviceChargeResult = getServiceCharge(subtotal, includeServiceCharge);
+    const serviceChargeResult = 0; // Service charge disabled: getServiceCharge(subtotal, includeServiceCharge);
     const totalPayable = getTotal(
       subtotal,
       tax,
@@ -213,8 +214,31 @@ const CloseTable = () => {
 
     try {
       // Step 1: Ensure order status is 'served' (required for billing)
+      // Step 1: Ensure order status is 'served' (required for billing)
       if (order.status !== 'served') {
-        await updateOrderStatusApi({ orderId: order._id, status: 'served' }).unwrap();
+        const confirmForce = window.confirm(
+          `Order status is currently '${order.status}'. It must be 'served' to print the bill.\n\n` +
+          "If you have already updated it in KOT Management, click OK to force refresh and try again.\n" +
+          "Click Cancel to go back and update it manually."
+        );
+
+        if (confirmForce) {
+          // Attempt to force update locally if user insists it's done, or just re-verify
+          try {
+            await updateOrderStatusApi({ orderId: order._id, status: 'served' }).unwrap();
+            // Wait a moment for propagation
+            setTimeout(() => handleCloseAndPrint(), 500);
+            return;
+          } catch (err) {
+            console.error("Force update failed", err);
+            setError("Failed to force update status. Please try sending to kitchen/serving again.");
+            setLoading(false);
+            return;
+          }
+        } else {
+          setLoading(false);
+          return;
+        }
       }
 
       // Step 2: Create bill
@@ -290,6 +314,19 @@ const CloseTable = () => {
         // Use the payment data from the processPayment response if available
         const paymentData = paymentResponse?.data?.payment || paymentResponse?.data || null;
         printBill(billData, paymentData);
+
+        // Auto trigger WhatsApp share if phone is available
+        const customerPhone = billData.customerId?.phone || billData.orderId?.customerPhone || order?.customerPhone || '';
+        if (customerPhone) {
+          const customerName = billData.customerId?.name || billData.orderId?.customerName || order?.customerName || 'Customer';
+          const totalAmount = billData.total || billData.totalAmount || calculations.totalPayable || 0;
+          const message = `Hello ${customerName},\nThank you for dining with us!\nYour bill amount is Rs ${totalAmount.toFixed(2)}.\nDate: ${new Date().toLocaleDateString()}\nVisit us again soon!`;
+
+          // Short delay to allow print dialog to initialize first
+          setTimeout(() => {
+            openWhatsAppChat(customerPhone, message);
+          }, 1000);
+        }
       } catch (printError) {
         console.error('Frontend printing failed:', printError);
         alert('Failed to print bill. Please try again.');

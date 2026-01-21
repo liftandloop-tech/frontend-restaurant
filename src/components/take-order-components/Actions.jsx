@@ -19,7 +19,7 @@ const Actions = ({
         className="w-full bg-blue-600 text-white font-medium py-[10px] rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
       >
         <Send size={18} />
-        <span>{loading ? "Sending..." : "Send to Kitchen (KOT)"}</span>
+        <span>{loading ? "Sending..." : "Send KOT & WA"}</span>
       </button>
 
       {/* Action Buttons */}
@@ -45,9 +45,8 @@ const Actions = ({
         <button
           type="button"
           onClick={onApplyDiscount}
-          className={`text-[15px] font-medium hover:underline ${
-            discount ? "text-green-600" : "text-blue-600"
-          }`}
+          className={`text-[15px] font-medium hover:underline ${discount ? "text-green-600" : "text-blue-600"
+            }`}
         >
           {discount
             ? `Discount: ${discount.type === "percentage" ? `${discount.value}%` : `₹${discount.value}`} (Click to change)`

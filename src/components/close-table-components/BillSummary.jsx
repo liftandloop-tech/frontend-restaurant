@@ -22,7 +22,7 @@ const BillSummary = ({ subtotal, tax, serviceCharge, discount, tip, total }) => 
         <Row label="Subtotal" value={subtotal} />
         <Row label="CGST" value={tax / 2} />
         <Row label="SGST" value={tax / 2} />
-        <Row label="Service Charge" value={serviceCharge} />
+        {/* <Row label="Service Charge" value={serviceCharge} /> */}
         {discount > 0 && <Row label="Discount" value={-discount} />}
         {tip > 0 && <Row label="Tip" value={tip} />}
         <div className="pt-3 border-t border-gray-200">

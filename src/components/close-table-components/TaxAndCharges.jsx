@@ -41,7 +41,7 @@ const TaxAndCharges = ({
             {(taxRate * 100 / 2).toFixed(1)}%
           </span>
         </div>
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <label className="inline-flex items-center cursor-pointer">
               <input
@@ -60,7 +60,7 @@ const TaxAndCharges = ({
           <span className="font-medium text-gray-800">
             {(serviceRate * 100).toFixed(0)}%
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

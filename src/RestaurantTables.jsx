@@ -187,9 +187,6 @@ const RestaurantTables = () => {
       // Handle authentication errors
       else if (error.status === 401) {
         setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
       } else if (error.status === 409) {
         setError(`Conflict: Table number ${tableData.tableNumber} already exists in your restaurant.`);
       } else if (error.status === 400 && error.data?.validationErrors && error.data.validationErrors.length > 0) {

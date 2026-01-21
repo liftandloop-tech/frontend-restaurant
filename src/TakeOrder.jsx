@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import Header from "./components/take-order-components/Header";
 import Menu from "./components/take-order-components/Menu";
@@ -10,14 +11,26 @@ import { getSubtotal, getTax, getServiceCharge, getTotal } from "./utils/calc";
 // Redux / RTK Query imports
 import { useGetCustomersQuery } from "./features/customers/customersApiSlice";
 import { useCreateOrderMutation } from "./features/orders/ordersApiSlice";
-import { useCreateKOTMutation } from "./features/kots/kotsApiSlice";
+import { useCreateKOTMutation, useMarkKOTPrintedMutation } from "./features/kots/kotsApiSlice";
+import { useGetAllStaffQuery } from "./features/staff/staffApiSlice";
+import { openWhatsAppChat } from "./utils/whatsapp";
 
-const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
+const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber, isSidebarCollapsed }) => {
   const [orderItems, setOrderItems] = useState([]);
   const [tableNumber, setTableNumber] = useState(initialTableNumber || "");
   const [orderNotes, setOrderNotes] = useState("");
   const [discount, setDiscount] = useState(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+
+  // Close modal on navigation
+  const location = useLocation();
+  const [initialPath] = useState(location.pathname);
+
+  useEffect(() => {
+    if (location.pathname !== initialPath) {
+      onClose();
+    }
+  }, [location.pathname, initialPath, onClose]);
 
   // Local UI state
   const [error, setError] = useState("");
@@ -37,17 +50,20 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
 
   // RTK Query Hooks
   const { data: customersResponse } = useGetCustomersQuery({ isActive: true });
+  const { data: staffData } = useGetAllStaffQuery();
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
   const [createKOT, { isLoading: isCreatingKOT }] = useCreateKOTMutation();
+  const [markKOTPrinted] = useMarkKOTPrintedMutation();
 
   const loading = isCreatingOrder || isCreatingKOT;
   const customers = customersResponse?.data || [];
+  const waiters = staffData?.data || [];
 
   // Recalculate totals
   useEffect(() => {
     const subtotal = getSubtotal(orderItems);
     const tax = getTax(subtotal);
-    const serviceCharge = getServiceCharge(subtotal);
+    const serviceCharge = 0; // Service charge disabled: getServiceCharge(subtotal);
 
     let discountAmount = 0;
     if (discount) {
@@ -106,7 +122,51 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
     });
   };
 
-  const handleSendToKOT = async () => {
+  const printKOT = (orderData, kotItems) => {
+    const printWindow = window.open('', '_blank', 'width=300,height=600');
+    if (!printWindow) return;
+
+    const itemsHtml = kotItems.map(item => `
+        <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+          <span>${item.name} x${item.qty || item.quantity}</span>
+        </div>
+        ${item.specialInstructions ? `<div style="font-size: 12px; font-style: italic;">Note: ${item.specialInstructions}</div>` : ''}
+      `).join('');
+
+    const html = `
+        <html>
+          <head>
+            <style>
+              body { font-family: monospace; padding: 10px; max-width: 300px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+              .footer { text-align: center; border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h3>KITCHEN ORDER TICKET</h3>
+              <p>Table: ${orderData.tableNumber}</p>
+              <p>Date: ${new Date().toLocaleString()}</p>
+              <p>Order #: ${orderData._id?.slice(-6) || 'N/A'}</p>
+            </div>
+            <div>
+              ${itemsHtml}
+            </div>
+            <div class="footer">
+              <p>Printed: ${new Date().toLocaleTimeString()}</p>
+            </div>
+          </body>
+        </html>
+      `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
+  const processOrder = async (shouldPrint = false) => {
     if (orderItems.length === 0) {
       setError("Please add items to the order before sending to kitchen.");
       return;
@@ -164,6 +224,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
       }
 
       const orderId = orderResponse.data._id;
+      const createdOrder = orderResponse.data;
 
       // Persist table order context
       if (typeof window !== "undefined") {
@@ -187,7 +248,39 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
         createKOT({ orderId, station }).unwrap()
       );
 
-      await Promise.all(kotPromises);
+      const createdKots = await Promise.all(kotPromises);
+
+      // Handle Printing and WhatsApp
+      if (shouldPrint) {
+        // Print KOT
+        printKOT(createdOrder, orderItems);
+
+        // Mark all created KOTs as printed
+        if (createdKots && createdKots.length > 0) {
+          for (const kotResult of createdKots) {
+            const kotData = kotResult?.data || kotResult;
+            if (kotData && kotData._id) {
+              try {
+                await markKOTPrinted(kotData._id).unwrap();
+              } catch (err) {
+                console.warn("Failed to mark KOT as printed:", err);
+              }
+            }
+          }
+        }
+
+        // Send WhatsApp to Waiter
+        if (selectedWaiterId) {
+          const waiter = waiters.find(w => (w._id === selectedWaiterId || w.id === selectedWaiterId));
+          if (waiter && waiter.phone) {
+            const kotItemsList = orderItems.map(i => `${i.name} x${i.quantity}`).join('\n');
+            const message = `KOT Alert!\nTable: ${numericTableNumber}\nOrder #${orderId.slice(-6)}\n\nItems:\n${kotItemsList}\n\nPlease attend to this order.`;
+
+            // Open WhatsApp chat
+            openWhatsAppChat(waiter.phone, message);
+          }
+        }
+      }
 
       const stationsMessage = selectedStations.length > 0
         ? selectedStations.join(", ")
@@ -210,13 +303,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
 
       const errorMessage = error.data?.message || error.message || "Failed to create order and send KOT.";
 
-      if (errorMessage.includes('expired') || errorMessage.includes('Token')) {
-        setError("Your session has expired. Please login again.");
-        setTimeout(() => {
-          // Let auth utils handle redirect if possible, or do it manually
-          window.location.href = '/login';
-        }, 2000);
-      } else if (error.status === 400 && error.data?.errors) {
+      if (error.status === 400 && error.data?.errors) {
         const validationMessages = error.data.errors.map(err => {
           return `${err.field}: ${err.message}`;
         });
@@ -226,6 +313,9 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
       }
     }
   };
+
+  const handleSendToKOT = () => processOrder(true);
+  const handlePrintAndSend = () => processOrder(true);
 
   const handleSaveDraft = async () => {
     if (!tableNumber || tableNumber.trim() === "") {
@@ -319,9 +409,15 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
     return null;
   }
 
+  const sidebarWidth = isSidebarCollapsed ? "80px" : "260px";
+
   return (
-    <div className="fixed inset-0 bg-white/20 backdrop-blur-lg bg-opacity-25 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col">
+    <div
+      className="fixed inset-0 bg-white/20 backdrop-blur-lg bg-opacity-25 flex items-center justify-center z-50 transition-[left] duration-300 ease-in-out"
+      onClick={onClose}
+      style={{ left: sidebarWidth }}
+    >
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <Header
           onClose={onClose}
           tableNumber={tableNumber}
@@ -344,6 +440,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber }) => {
               onOrderNotesChange={setOrderNotes}
               discount={discount}
               onSendToKOT={handleSendToKOT}
+              onPrintAndSend={handlePrintAndSend}
               onSaveDraft={handleSaveDraft}
               onCancel={handleCancel}
               onApplyDiscount={() => setIsDiscountModalOpen(true)}

@@ -155,7 +155,7 @@ const TableCard = ({
             className={`h-8 px-3 rounded text-[13px] border ${styles.outlineBtn} w-full`}
             onClick={(e) => { e.stopPropagation(); onUpdateStatus && onUpdateStatus(id, 'reserved'); }}
           >
-            Reserve
+            Available
           </button>
         )}
         {status === "serving" && (

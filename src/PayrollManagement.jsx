@@ -145,7 +145,7 @@ const PayrollManagement = () => {
             <ExpenseBreakdown />
 
             {/* Top Earners */}
-            <TopEarners />
+            <TopEarners staff={filteredStaff} />
 
             {/* Download Report Button */}
             <DownloadReportButton />

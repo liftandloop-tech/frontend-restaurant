@@ -318,7 +318,7 @@ const KOTManagement = () => {
                 className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors h-[40px] w-[150px]"
               >
                 <FiPlus className="w-4 h-4" />
-                <span>Take Order</span>
+                <span>New Order</span>
               </button>
 
               {/* Refresh Button */}
@@ -531,15 +531,7 @@ const KOTManagement = () => {
                           Print Bill
                         </button>
                       )}
-                      {!kot.isPrinted && (
-                        <button
-                          onClick={() => handleMarkPrinted(kot._id)}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
-                        >
-                          <FiPrinter className="w-4 h-4" />
-                          Mark Printed
-                        </button>
-                      )}
+
                     </div>
 
                     {/* Status Update Buttons */}

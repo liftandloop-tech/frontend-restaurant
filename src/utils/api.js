@@ -65,12 +65,12 @@ const refreshAccessToken = async () => {
       localStorage.removeItem('isAuthenticated');
 
       // Redirect to login if we're in the browser
-      if (typeof window !== 'undefined') {
-        // Use setTimeout to ensure error is thrown before redirect
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 100);
-      }
+      // if (typeof window !== 'undefined') {
+      //   // Use setTimeout to ensure error is thrown before redirect
+      //   setTimeout(() => {
+      //     window.location.href = '/login';
+      //   }, 100);
+      // }
 
       throw error;
     } finally {
@@ -163,7 +163,7 @@ export const apiCall = async (endpoint, method = 'GET', data = null, retry = tru
         console.error('RefreshToken failed:', refreshError);
         // Refresh failed - tokens cleared and redirect initiated
         // Create a special error that indicates redirect is happening
-        const error = new Error('Session expired. Redirecting to login...');
+        const error = new Error('Session expired. Please login again.');
         error.response = result;
         error.status = 401;
         error.isRefreshFailure = true; // Flag to indicate refresh failed
@@ -182,11 +182,12 @@ export const apiCall = async (endpoint, method = 'GET', data = null, retry = tru
         localStorage.removeItem('isAuthenticated');
 
         // Redirect to login if we're in the browser
-        if (typeof window !== 'undefined') {
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 100);
-        }
+        // if (typeof window !== 'undefined') {
+        //   // Use setTimeout to ensure error is thrown before redirect
+        //   setTimeout(() => {
+        //     window.location.href = '/login';
+        //   }, 100);
+        // }
       }
 
       const error = new Error(errorMessage);

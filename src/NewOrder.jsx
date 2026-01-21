@@ -5,8 +5,10 @@ import MenuSection from "./components/new-order-components/MenuSection";
 import OrderCart from "./components/new-order-components/OrderCart";
 import OrdersTable from "./components/new-order-components/OrdersTable";
 import { createOrder } from "./utils/orders";
-import { createKOT } from "./utils/kots";
+import { createKOT, markKOTPrinted } from "./utils/kots";
 import { updateTableStatus, getTables } from "./utils/tables";
+import { openWhatsAppChat } from "./utils/whatsapp";
+import { useGetAllStaffQuery } from "./features/staff/staffApiSlice";
 
 const NewOrder = () => {
   const navigate = useNavigate();
@@ -26,6 +28,54 @@ const NewOrder = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Get staff data for WhatsApp integration
+  const { data: staffData } = useGetAllStaffQuery();
+  const waiters = staffData?.data || [];
+
+  const printKOT = (orderData, kotItems) => {
+    const printWindow = window.open('', '_blank', 'width=300,height=600');
+    if (!printWindow) return;
+
+    const itemsHtml = kotItems.map(item => `
+        <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+          <span>${item.name} x${item.qty || item.quantity}</span>
+        </div>
+        ${item.specialInstructions ? `<div style="font-size: 12px; font-style: italic;">Note: ${item.specialInstructions}</div>` : ''}
+      `).join('');
+
+    const html = `
+        <html>
+          <head>
+            <style>
+              body { font-family: monospace; padding: 10px; max-width: 300px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+              .footer { text-align: center; border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h3>KITCHEN ORDER TICKET (NEW)</h3>
+              <p>Type: ${orderType.toUpperCase()}</p>
+              <p>Date: ${new Date().toLocaleString()}</p>
+              <p>Order #: ${orderData._id?.slice(-6) || 'N/A'}</p>
+            </div>
+            <div>
+              ${itemsHtml}
+            </div>
+            <div class="footer">
+              <p>Printed: ${new Date().toLocaleTimeString()}</p>
+            </div>
+          </body>
+        </html>
+      `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
 
   const handleAddToCart = (item) => {
     setCartItems((prev) => {
@@ -270,7 +320,35 @@ const NewOrder = () => {
 
         // Auto-create KOT for kitchen when order is created
         try {
-          await createKOT(orderId, 'kitchen');
+          const kotResponse = await createKOT(orderId, 'kitchen');
+
+          // Print KOT and Send WhatsApp
+          const createdOrder = response.data;
+
+          // Print KOT
+          printKOT(createdOrder, validatedItems);
+
+          // Mark KOT as printed
+          if (kotResponse && kotResponse.success && kotResponse.data && kotResponse.data._id) {
+            try {
+              await markKOTPrinted(kotResponse.data._id);
+            } catch (markErr) {
+              console.warn("Failed to mark KOT as printed:", markErr);
+            }
+          }
+
+          // Send WhatsApp to Waiter (if assigned)
+          if (orderData.waiterId) {
+            const waiter = waiters.find(w => (w._id === orderData.waiterId || w.id === orderData.waiterId));
+            if (waiter && waiter.phone) {
+              const kotItemsList = validatedItems.map(i => `${i.name} x${i.qty}`).join('\n');
+              const message = `New Order Alert (${orderType})!\nOrder #${orderId.slice(-6)}\n\nItems:\n${kotItemsList}\n\nPlease attend to this order.`;
+
+              // Open WhatsApp chat
+              openWhatsAppChat(waiter.phone, message);
+            }
+          }
+
         } catch (kotError) {
           console.error('Failed to create KOT:', kotError);
           // Don't fail the order creation if KOT creation fails
@@ -319,15 +397,7 @@ const NewOrder = () => {
     } catch (error) {
       // Handle authentication errors
       if (error.status === 401 || error.message.includes('Token') || error.message.includes('Unauthorized')) {
-        setError("Your session has expired. Please login again.");
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('isAuthenticated');
-          navigate('/login');
-        }, 2000);
+        // Session expired message removed as per user request
       } else if (error.status === 400 && error.validationErrors && error.validationErrors.length > 0) {
         // Handle validation errors - show detailed messages
         const validationMessages = error.validationErrors.map(err => {
@@ -427,6 +497,7 @@ const NewOrder = () => {
               cartItems={cartItems}
               setCartItems={setCartItems}
               onConfirmOrder={handleConfirmOrder}
+              orderType={orderType}
               loading={loading}
               error={error}
               success={success}
