@@ -136,9 +136,9 @@ const ChangePasswordModal = ({ isOpen, onClose, onSave }) => {
               name="currentPassword"
               value={formData.currentPassword}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.currentPassword ? "border-red-300" : "border-gray-300"
-              }`}
+              autoComplete="current-password"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.currentPassword ? "border-red-300" : "border-gray-300"
+                }`}
               required
             />
             {errors.currentPassword && (
@@ -157,9 +157,9 @@ const ChangePasswordModal = ({ isOpen, onClose, onSave }) => {
               name="newPassword"
               value={formData.newPassword}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.newPassword ? "border-red-300" : "border-gray-300"
-              }`}
+              autoComplete="new-password"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.newPassword ? "border-red-300" : "border-gray-300"
+                }`}
               required
             />
             {errors.newPassword && (
@@ -179,9 +179,9 @@ const ChangePasswordModal = ({ isOpen, onClose, onSave }) => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.confirmPassword ? "border-red-300" : "border-gray-300"
-              }`}
+              autoComplete="new-password"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.confirmPassword ? "border-red-300" : "border-gray-300"
+                }`}
               required
             />
             {errors.confirmPassword && (

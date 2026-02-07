@@ -12,11 +12,13 @@ const AllReservations = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // RTK Query
+  // RTK Query hooks
   const { data: response, isLoading } = useGetReservationsQuery(undefined, {
     skip: !isOpen, // Only fetch when modal is open
     pollingInterval: 30000
   });
+  const [deleteReservation] = useDeleteReservationMutation();
+  const [updateStatus] = useUpdateReservationStatusMutation();
 
   // Map API data to component structure
   const reservationsData = useMemo(() => {
@@ -24,14 +26,16 @@ const AllReservations = ({ isOpen, onClose }) => {
 
     return response.data.map(r => {
       // Simplify date parsing
+      const resDate = new Date(r.reservationDate);
       return {
         id: r._id,
         customer: {
           name: r.customerName,
           phone: r.customerPhone,
+          email: r.customerEmail
         },
         date: `${r.reservationDate} ${r.reservationTime}`,
-        dateInfo: new Date(r.reservationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        dateInfo: resDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         table: `Table ${r.tableNumber}`,
         capacity: r.numberOfGuests,
         partySize: r.numberOfGuests,
@@ -42,6 +46,24 @@ const AllReservations = ({ isOpen, onClose }) => {
     });
   }, [response]);
 
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this reservation?")) {
+      try {
+        await deleteReservation(id).unwrap();
+      } catch (err) {
+        console.error("Failed to delete reservation:", err);
+      }
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateStatus({ id, status: newStatus }).unwrap();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
+
   // Filter reservations based on active tab and search query
   const filteredReservations = useMemo(() => {
     return reservationsData.filter((reservation) => {
@@ -49,16 +71,15 @@ const AllReservations = ({ isOpen, onClose }) => {
       let passesTabFilter = true;
 
       if (activeTab === "current-week") {
-        // Logic for current week - simplified check
         const resDate = new Date(reservation.originalData.reservationDate);
         const today = new Date();
         const nextWeek = new Date();
         nextWeek.setDate(today.getDate() + 7);
         passesTabFilter = resDate >= today && resDate <= nextWeek;
       } else if (activeTab === "upcoming") {
-        passesTabFilter = reservation.status === "upcoming" || reservation.status === "pending" || reservation.status === "confirmed";
+        passesTabFilter = ["upcoming", "pending", "confirmed"].includes(reservation.status);
       } else if (activeTab === "checked-in") {
-        passesTabFilter = reservation.status === "checked-in" || reservation.status === "seated";
+        passesTabFilter = ["checked-in", "seated"].includes(reservation.status);
       } else if (activeTab === "completed") {
         passesTabFilter = reservation.status === "completed";
       } else if (activeTab === "cancelled") {
@@ -90,8 +111,8 @@ const AllReservations = ({ isOpen, onClose }) => {
   // Stats for the reservation counts
   const stats = useMemo(() => ({
     total: reservationsData.length,
-    checkedIn: reservationsData.filter((r) => r.status === "checked-in" || r.status === "seated").length,
-    upcoming: reservationsData.filter((r) => r.status === "upcoming" || r.status === "pending" || r.status === "confirmed").length,
+    checkedIn: reservationsData.filter((r) => ["checked-in", "seated"].includes(r.status)).length,
+    upcoming: reservationsData.filter((r) => ["upcoming", "pending", "confirmed"].includes(r.status)).length,
     cancelled: reservationsData.filter((r) => r.status === "cancelled").length,
   }), [reservationsData]);
 
@@ -134,13 +155,17 @@ const AllReservations = ({ isOpen, onClose }) => {
 
           <ReservationStats stats={stats} />
 
-          <ReservationTable reservations={filteredReservations} />
+          <ReservationTable
+            reservations={filteredReservations}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+          />
 
           <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
             <ActionButtons reservations={filteredReservations} />
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(filteredReservations.length / 5)}
+              totalPages={Math.ceil(filteredReservations.length / 10)}
               onPageChange={setCurrentPage}
             />
           </div>

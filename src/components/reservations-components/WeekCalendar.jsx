@@ -87,13 +87,16 @@ const ReservationPill = ({ item }) => {
     item.status === "cancelled"
       ? "bg-red-500"
       : item.status === "checked-in"
-      ? "bg-blue-600"
-      : "bg-amber-500";
+        ? "bg-blue-600"
+        : "bg-amber-500";
 
   return (
-    <div className={`inline-flex flex-col gap-1 rounded-md px-2 py-1 text-white ${color}`}>
-      <div className="text-[11px] leading-none">{item.time}</div>
-      <div className="text-[11px] leading-none opacity-95">{item.name}</div>
+    <div
+      className={`flex flex-col gap-0.5 rounded px-2 py-1.5 text-white shadow-sm ${color}`}
+      title={`${item.time} - ${item.name}`}
+    >
+      <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">{item.time}</div>
+      <div className="text-[12px] font-medium truncate leading-tight">{item.name}</div>
     </div>
   );
 };

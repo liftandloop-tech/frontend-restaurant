@@ -12,29 +12,20 @@ export const reservationsApiSlice = apiSlice.injectEndpoints({
             providesTags: ['Reservation'],
         }),
         getReservationById: builder.query({
-            query: (id) => `reservations/get/reservation/by/:id/${id}`,
+            query: (id) => `reservations/get/reservation/by/${id}`,
             providesTags: (result, error, id) => [{ type: 'Reservation', id }],
         }),
         createReservation: builder.mutation({
             query: (reservationData) => ({
                 url: 'reservations/create/reservation',
                 method: 'POST',
-                body: {
-                    customerName: reservationData.name,
-                    customerPhone: reservationData.phone,
-                    customerEmail: reservationData.email,
-                    tableNumber: parseInt(reservationData.table),
-                    reservationDate: reservationData.date,
-                    reservationTime: reservationData.time,
-                    numberOfGuests: parseInt(reservationData.partySize),
-                    specialRequests: reservationData.notes
-                },
+                body: reservationData,
             }),
             invalidatesTags: ['Reservation'],
         }),
         updateReservation: builder.mutation({
             query: ({ id, ...updateData }) => ({
-                url: `reservations/update/reservation/by/:id/${id}`,
+                url: `reservations/update/reservation/by/${id}`,
                 method: 'PUT',
                 body: updateData,
             }),
@@ -42,7 +33,7 @@ export const reservationsApiSlice = apiSlice.injectEndpoints({
         }),
         updateReservationStatus: builder.mutation({
             query: ({ id, status }) => ({
-                url: `reservations/update/reservation/by/:id/status/${id}/status`,
+                url: `reservations/update/reservation/by/${id}/status`,
                 method: 'PATCH',
                 body: { status },
             }),
@@ -50,7 +41,7 @@ export const reservationsApiSlice = apiSlice.injectEndpoints({
         }),
         deleteReservation: builder.mutation({
             query: (id) => ({
-                url: `reservations/delete/reservation/by/:id/${id}`,
+                url: `reservations/delete/reservation/by/${id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: ['Reservation'],

@@ -69,14 +69,14 @@ const AddReservation = () => {
 
     try {
       const reservationData = {
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim() || undefined,
-        date: form.date,
-        time: form.time,
-        partySize: form.partySize,
-        table: tableNumber,
-        notes: form.notes.trim() || undefined
+        customerName: form.name.trim(),
+        customerPhone: form.phone.trim(),
+        customerEmail: form.email.trim() || undefined,
+        reservationDate: form.date,
+        reservationTime: form.time,
+        numberOfGuests: parseInt(form.partySize),
+        tableNumber: parseInt(tableNumber),
+        specialRequests: form.notes.trim() || undefined
       };
 
       const response = await createReservation(reservationData).unwrap();
@@ -94,9 +94,9 @@ const AddReservation = () => {
       // Handle authentication errors
       if (error.status === 401) {
         setError("Your session has expired. Please login again.");
-      } else if (error.status === 400 && error.data?.validationErrors && error.data.validationErrors.length > 0) {
+      } else if (error.status === 400 && error.data?.errors && error.data.errors.length > 0) {
         // Handle validation errors
-        const validationMessages = error.data.validationErrors.map(err => {
+        const validationMessages = error.data.errors.map(err => {
           return `${err.field}: ${err.message}`;
         });
         setError(`Validation failed:\n${validationMessages.join('\n')}`);
