@@ -18,13 +18,26 @@ const LicenseKey = () => {
         setStatus(null);
 
         try {
-            const response = await api.post('license/verify', { licenseKey });
+            // Include licenseToken from stored user data so the backend can
+            // locate the restaurant when restaurantId is not yet on the user
+            const userDataStr = localStorage.getItem('userData');
+            let licenseToken = null;
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    licenseToken = userData?.licenseToken || null;
+                } catch (e) { /* ignore parse errors */ }
+            }
+
+            const payload = { licenseKey };
+            if (licenseToken) payload.licenseToken = licenseToken;
+
+            const response = await api.post('license/verify', payload);
 
             if (response.success) {
                 setStatus('success');
                 setMessage(response.message || 'License verified successfully!');
-                // Update local storage or context if they store license status?
-                // For now, redirect to dashboard after a delay
+                // Redirect to dashboard after a short delay
                 setTimeout(() => {
                     navigate('/');
                 }, 2000);
@@ -89,8 +102,8 @@ const LicenseKey = () => {
                             type="submit"
                             disabled={isLoading}
                             className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${isLoading
-                                    ? 'bg-blue-400 cursor-not-allowed'
-                                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                                ? 'bg-blue-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                                 }`}
                         >
                             {isLoading ? (

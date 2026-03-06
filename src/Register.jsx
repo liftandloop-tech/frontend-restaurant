@@ -90,13 +90,12 @@ const Register = () => {
       const response = await register(registrationData);
 
       if (response.success) {
-        // Don't auto-authenticate - let user login manually
-        // Show success message and navigate to login page
-        // Optionally pass email to login page via state
-        navigate("/login", {
+        // Navigate to license activation page with the token
+        navigate("/activate-license", {
           state: {
             registeredEmail: formData.email,
-            message: "Registration successful! Please login to continue."
+            licenseToken: response.data?.user?.licenseToken,
+            message: "Registration successful! Please activate your license to continue."
           }
         });
       }
@@ -141,8 +140,8 @@ const Register = () => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300 bg-white"
                     }`}
                   placeholder="Enter your full name"
                 />
@@ -171,8 +170,8 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300 bg-white"
                     }`}
                   placeholder="Enter your email"
                 />
@@ -201,8 +200,8 @@ const Register = () => {
                   value={formData.restaurantName}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.restaurantName
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300 bg-white"
                     }`}
                   placeholder="Enter your restaurant name"
                 />
@@ -233,8 +232,8 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300 bg-white"
                     }`}
                   placeholder="Create a password"
                 />
@@ -274,8 +273,8 @@ const Register = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.confirmPassword
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300 bg-white"
                     }`}
                   placeholder="Confirm your password"
                 />

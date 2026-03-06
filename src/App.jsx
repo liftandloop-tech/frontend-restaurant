@@ -42,7 +42,7 @@ const StaffReport = React.lazy(() => import("./StaffReport"))
 const VendorReport = React.lazy(() => import("./VendorReport"))
 const PurchaseReport = React.lazy(() => import("./PurchaseReport"))
 const OfferReport = React.lazy(() => import("./OfferReport"))
-// const ActivateLicense = React.lazy(() => import("./ActivateLicense"));
+const ActivateLicense = React.lazy(() => import("./ActivateLicense"));
 import { useAuth } from "./context/AuthContext";
 
 
@@ -54,11 +54,6 @@ const LoadingSpinner = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 );
-
-
-
-
-
 /**
  * The main App component sets up the application's routing and global state.
  * It manages the visibility of the "Take Order" modal, allowing it to be
@@ -66,9 +61,7 @@ const LoadingSpinner = () => (
  * It also handles authentication state and routing.
  */
 const App = () => {
-  const { isAuthenticated, isLoading,
-    // isLicenseVerified,
-    login, logout } = useAuth();
+  const { isAuthenticated, isLoading, isLicenseVerified, login, logout } = useAuth();
 
   // State to control sidebar collapse state for layout padding
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -117,40 +110,40 @@ const App = () => {
     }
 
     //License check
-    // License check - Commented out to bypass license verification for now
-    // if (!isLicenseVerified) {
-    //   return <Navigate to="/activate-license" replace />;
-    // }
+    // License check
+    if (!isLicenseVerified) {
+      return <Navigate to="/activate-license" replace />;
+    }
 
     return children;
   };
 
-  // Public Route Component (redirect to dashboard if already authenticated)
+  // Public Route Component (redirect to dashboard if already authenticated and verified)
   const PublicRoute = ({ children }) => {
     if (isLoading) return <LoadingSpinner />;
 
     if (isAuthenticated) {
-      // if (!isLicenseVerified) return <Navigate to="/activate-license" replace />;
-      return <Navigate to="/" replace />;
+      if (isLicenseVerified) {
+        return <Navigate to="/" replace />;
+      }
+      return <Navigate to="/activate-license" replace />;
     }
     return children;
   };
 
-  // License Route Component (accessible if auth but not verified)
   const LicenseRoute = ({ children }) => {
     if (isLoading) return <LoadingSpinner />;
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-    if (isLicenseVerified) return <Navigate to="/" replace />;
+    if (isAuthenticated && isLicenseVerified) return <Navigate to="/" replace />;
     return children;
   };
 
   return (
     <BrowserRouter>
-      <div className={`app-container ${isAuthenticated ? 'has-sidebar' : ''}`}>
+      <div className={`app-container ${(isAuthenticated && isLicenseVerified) ? 'has-sidebar' : ''}`}>
         {/* Sidebar replaces the old Header */}
-        {isAuthenticated && <Sidebar onLogout={handleLogout} onCollapse={setIsSidebarCollapsed} />}
+        {(isAuthenticated && isLicenseVerified) && <Sidebar onLogout={handleLogout} onCollapse={setIsSidebarCollapsed} />}
 
-        <main className={`main-content ${isSidebarCollapsed ? 'sidebar-collapsed-padding' : ''}`}>
+        <main className={`main-content ${(isAuthenticated && isLicenseVerified) && isSidebarCollapsed ? 'sidebar-collapsed-padding' : ''}`}>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Public Routes - Login and Register */}
@@ -184,6 +177,15 @@ const App = () => {
                   <PublicRoute>
                     <ResetPassword />
                   </PublicRoute>
+                }
+              />
+
+              <Route
+                path="/activate-license"
+                element={
+                  <LicenseRoute>
+                    <ActivateLicense />
+                  </LicenseRoute>
                 }
               />
 
@@ -406,6 +408,7 @@ const App = () => {
               <Route
                 path="/profile"
                 element={
+
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
