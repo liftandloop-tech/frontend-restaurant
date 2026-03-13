@@ -56,6 +56,15 @@ const PopularAlerts = ({ summary }) => {
     });
   }
 
+  if (summary?.newCustomers > 0) {
+    alerts.push({
+      bg: "bg-purple-50",
+      icon: <span className="text-purple-600 text-[14px]">👤</span>,
+      title: "New Customers",
+      subtitle: `${summary.newCustomers} new customers joined today (including via chatbot).`
+    });
+  }
+
   // Fallback / default alerts if nothing active
   if (alerts.length < 3) {
     alerts.push({

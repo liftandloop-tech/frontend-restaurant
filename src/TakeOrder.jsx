@@ -146,6 +146,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber, isSidebarCo
             <div class="header">
               <h3>KITCHEN ORDER TICKET</h3>
               <p>Table: ${orderData.tableNumber}</p>
+              <p>Waiter: ${orderData.waiterId?.fullName || orderData.waiterId?.name || 'Staff'}</p>
               <p>Date: ${new Date().toLocaleString()}</p>
               <p>Order #: ${orderData._id?.slice(-6) || 'N/A'}</p>
             </div>
@@ -172,7 +173,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber, isSidebarCo
       return;
     }
 
-    if (!tableNumber || tableNumber.trim() === "") {
+    if (!tableNumber || String(tableNumber).trim() === "") {
       setError("Please enter a table number.");
       return;
     }
@@ -318,7 +319,7 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber, isSidebarCo
   const handlePrintAndSend = () => processOrder(true);
 
   const handleSaveDraft = async () => {
-    if (!tableNumber || tableNumber.trim() === "") {
+    if (!tableNumber || String(tableNumber).trim() === "") {
       setError("Please enter a table number to save draft.");
       return;
     }

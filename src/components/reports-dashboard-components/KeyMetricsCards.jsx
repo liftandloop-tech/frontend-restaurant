@@ -54,7 +54,7 @@ const KeyMetricsCards = ({ data, value = 0, trend = 0 }) => {
     {
       id: 3,
       title: "Total Customers",
-      value: (metricsData.totalCustomers || 0).toLocaleString(),
+      value: (metricsData.grandTotalCustomers || metricsData.totalCustomers || 0).toLocaleString(),
       change: `${(metricsData.trends?.totalCustomers || 0) > 0 ? "+" : ""}${metricsData.trends?.totalCustomers || 0}%`,
       changeType: (metricsData.trends?.totalCustomers || 0) >= 0 ? "positive" : "negative",
       icon: (

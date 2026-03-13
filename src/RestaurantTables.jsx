@@ -189,9 +189,9 @@ const RestaurantTables = () => {
         setError("Your session has expired. Please login again.");
       } else if (error.status === 409) {
         setError(`Conflict: Table number ${tableData.tableNumber} already exists in your restaurant.`);
-      } else if (error.status === 400 && error.data?.validationErrors && error.data.validationErrors.length > 0) {
+      } else if (error.status === 400 && error.data?.errors && error.data.errors.length > 0) {
         // Handle validation errors
-        const validationMessages = error.data.validationErrors.map(err => {
+        const validationMessages = error.data.errors.map(err => {
           return `${err.field}: ${err.message}`;
         });
         setError(`Validation failed:\n${validationMessages.join('\n')}`);

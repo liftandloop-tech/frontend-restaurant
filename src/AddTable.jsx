@@ -258,7 +258,7 @@ const AddTable = ({ isOpen, onClose, onSubmit, error: externalError, success: ex
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="available">Available</option>
-                    <option value="occupied">Occupied</option>
+                    <option value="serving">Occupied</option>
                     <option value="reserved">Reserved</option>
                     <option value="cleaning">Cleaning</option>
                     <option value="maintenance">Maintenance</option>
