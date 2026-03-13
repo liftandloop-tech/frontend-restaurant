@@ -31,7 +31,7 @@ const NewOrder = () => {
 
   // Get staff data for WhatsApp integration
   const { data: staffData } = useGetAllStaffQuery();
-  const waiters = staffData?.data || [];
+  const waiters = staffData?.data?.staff || [];
 
   const printKOT = (orderData, kotItems) => {
     const printWindow = window.open('', '_blank', 'width=300,height=600');
@@ -79,10 +79,11 @@ const NewOrder = () => {
 
   const handleAddToCart = (item) => {
     setCartItems((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.id === item.id);
+      const itemId = item._id || item.id;
+      const existingItem = prev.find((cartItem) => (cartItem._id || cartItem.id) === itemId);
       if (existingItem) {
         return prev.map((cartItem) =>
-          cartItem.id === item.id
+          (cartItem._id || cartItem.id) === itemId
             ? { ...cartItem, qty: cartItem.qty + 1 }
             : cartItem
         );
@@ -91,6 +92,7 @@ const NewOrder = () => {
       }
     });
   };
+
 
   const handleSaveDraft = async () => {
     setError("");
@@ -339,7 +341,8 @@ const NewOrder = () => {
 
           // Send WhatsApp to Waiter (if assigned)
           if (orderData.waiterId) {
-            const waiter = waiters.find(w => (w._id === orderData.waiterId || w.id === orderData.waiterId));
+            const waiterArray = Array.isArray(waiters) ? waiters : [];
+            const waiter = waiterArray.find(w => (w._id === orderData.waiterId || w.id === orderData.waiterId));
             if (waiter && waiter.phone) {
               const kotItemsList = validatedItems.map(i => `${i.name} x${i.qty}`).join('\n');
               const message = `New Order Alert (${orderType})!\nOrder #${orderId.slice(-6)}\n\nItems:\n${kotItemsList}\n\nPlease attend to this order.`;
@@ -348,6 +351,7 @@ const NewOrder = () => {
               openWhatsAppChat(waiter.phone, message);
             }
           }
+
 
         } catch (kotError) {
           console.error('Failed to create KOT:', kotError);

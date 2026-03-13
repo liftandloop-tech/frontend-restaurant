@@ -21,6 +21,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
             query: () => 'users/user/profile',
             providesTags: ['User'],
         }),
+        refreshToken: builder.mutation({
+            query: (body) => ({
+                url: 'users/refresh-token',
+                method: 'POST',
+                body,
+            }),
+        }),
     }),
 });
 

@@ -4,16 +4,16 @@ const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, orderType = "takea
   const [serviceChargeEnabled, setServiceChargeEnabled] = useState(false);
   const updateQuantity = (id, newQty) => {
     if (newQty <= 0) {
-      setCartItems((prev) => prev.filter((item) => item.id !== id));
+      setCartItems((prev) => prev.filter((item) => (item._id || item.id) !== id));
       return;
     }
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, qty: newQty } : item))
+      prev.map((item) => ((item._id || item.id) === id ? { ...item, qty: newQty } : item))
     );
   };
 
   // Calculate totals
-  const subtotal = cartItems.reduce((sum, it) => sum + it.price * it.qty, 0);
+  const subtotal = cartItems.reduce((sum, it) => sum + (it.price || 0) * (it.qty || 0), 0);
   const tax = Math.round(0.05 * subtotal); // 5% tax as shown in image
   const serviceCharge = serviceChargeEnabled ? Math.round(0.1 * subtotal) : 0; // 10% service charge
   const total = subtotal + tax + serviceCharge;
@@ -46,69 +46,74 @@ const OrderCart = ({ cartItems, setCartItems, onConfirmOrder, orderType = "takea
             <p>Your cart is empty</p>
           </div>
         ) : (
-          cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              <img
-                src={item.img}
-                className="w-16 h-16 rounded-xl object-cover shadow-sm"
-                alt={item.name}
-              />
-              <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-1">
-                  {item.name}
-                </h4>
-                <p className="text-sm text-gray-600 mb-2">{item.note}</p>
-                <div className="flex items-center">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.qty - 1)}
-                    className="w-8 h-8 rounded-lg border-2 border-gray-300 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all duration-200"
-                  >
-                    <svg
-                      className="w-4 h-4 text-gray-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+          cartItems.map((item, index) => {
+            const itemId = item._id || item.id;
+            const uniqueKey = itemId ? `${itemId}-${index}` : `cart-item-${index}`;
+            return (
+              <div
+                key={uniqueKey}
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                <img
+                  src={item.img || item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"}
+                  className="w-16 h-16 rounded-xl object-cover shadow-sm"
+                  alt={item.name}
+                />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900 mb-1">
+                    {item.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-2">{item.note || item.description || "No special instructions"}</p>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => updateQuantity(itemId, item.qty - 1)}
+                      className="w-8 h-8 rounded-lg border-2 border-gray-300 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all duration-200"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  <span className="w-10 text-center font-semibold text-gray-900 text-lg">
-                    {item.qty}
-                  </span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.qty + 1)}
-                    className="w-8 h-8 rounded-lg border-2 border-gray-300 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all duration-200"
-                  >
-                    <svg
-                      className="w-4 h-4 text-gray-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                    <span className="w-10 text-center font-semibold text-gray-900 text-lg">
+                      {item.qty}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(itemId, item.qty + 1)}
+                      className="w-8 h-8 rounded-lg border-2 border-gray-300 flex items-center justify-center hover:bg-gray-200 hover:border-gray-400 transition-all duration-200"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-gray-900 text-lg">
+                    ₹{(item.price * item.qty) || 0}
+                  </div>
+                  <div className="text-sm text-gray-500">₹{item.price || 0} each</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-900 text-lg">
-                  ₹{item.price * item.qty}
-                </div>
-                <div className="text-sm text-gray-500">₹{item.price} each</div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
 
       {/* Summary */}
       <div className="border-t border-gray-200 pt-6 space-y-3">

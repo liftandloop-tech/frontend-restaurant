@@ -50,7 +50,7 @@ const ChangeOrder = ({
   const [createKOTApi] = useCreateKOTMutation();
   const [markKOTPrinted] = useMarkKOTPrintedMutation();
   const { data: staffData } = useGetAllStaffQuery();
-  const waiters = staffData?.data || [];
+  const waiters = staffData?.data?.staff || [];
 
   const printKOT = (orderData, kotItems) => {
     const printWindow = window.open('', '_blank', 'width=300,height=600');

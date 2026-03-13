@@ -140,8 +140,10 @@ export const apiCall = async (endpoint, method = 'GET', data = null, retry = tru
     const errorMessage = result.message || 'Unauthorized';
     console.log('401 Error for endpoint:', endpoint, 'Message:', errorMessage);
 
+    const normalizedError = errorMessage.toLowerCase();
+    
     // If token expired, try to refresh
-    if (errorMessage.includes('expired') || errorMessage.includes('Token')) {
+    if (normalizedError.includes('expired') || normalizedError.includes('token')) {
       try {
         // Refresh the token
         const newToken = await refreshAccessToken();
@@ -174,7 +176,7 @@ export const apiCall = async (endpoint, method = 'GET', data = null, retry = tru
       console.log('401 Error - No refresh attempted:', errorMessage);
 
       // If it's "No token provided", clear authentication state
-      if (errorMessage.includes('No token provided')) {
+      if (normalizedError.includes('no token provided')) {
         console.log('Clearing authentication state due to missing token');
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');

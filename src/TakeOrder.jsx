@@ -56,8 +56,8 @@ const TakeOrder = ({ show, onClose, tableNumber: initialTableNumber, isSidebarCo
   const [markKOTPrinted] = useMarkKOTPrintedMutation();
 
   const loading = isCreatingOrder || isCreatingKOT;
-  const customers = customersResponse?.data || [];
-  const waiters = staffData?.data || [];
+  const customers = customersResponse?.data?.customers || customersResponse?.data || [];
+  const waiters = staffData?.data?.staff || [];
 
   // Recalculate totals
   useEffect(() => {
